@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
 
-const agentStates = {
+const agentStates: { [key: string]: string } = {
     "633ef7ea-a1ce-4b27-8392-59d889bc364c": "💙Feedback💙",
     "bc87d9ab-5182-4262-869d-3c15becafed7": "👥Reunião/Treinamento👥",
     "89a84427-67ba-49ef-a29c-9bd3438bf314": "⏰Yooga Time⏰",
@@ -14,10 +15,20 @@ const agentStates = {
 };
 
 const AgentsList = () => {
-    const [agents, setAgents] = useState([]);
-    const [filteredAgents, setFilteredAgents] = useState([]);
+    interface Agent {
+        id: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        avatar: { url: string };
+        agent_status?: { id: string; name: string };
+        login_status: boolean;
+    }
+
+    const [agents, setAgents] = useState<Agent[]>([]);
+    const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
     const [search, setSearch] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
     // Função para buscar os agentes
     const fetchAgents = async () => {
@@ -36,20 +47,20 @@ const AgentsList = () => {
     }, []);
 
     // Função para filtrar os agentes com base na pesquisa e status
-    const handleSearch = (event) => {
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value.toLowerCase();
         setSearch(value);
 
         const filtered = agents.filter(agent =>
             (agent.first_name + " " + agent.last_name).toLowerCase().includes(value) ||
             agent.email.toLowerCase().includes(value) ||
-            (agentStates[agent.agent_status?.id] || "").toLowerCase().includes(value)
+            (agent.agent_status?.id && agentStates[agent.agent_status.id] || "").toLowerCase().includes(value)
         );
 
         setFilteredAgents(filtered);
     };
 
-    const handleStatusFilter = (status) => {
+    const handleStatusFilter = (status: string | null) => {
         setSelectedStatus(status);
         
         const filtered = agents.filter(agent =>
@@ -109,8 +120,8 @@ const AgentsList = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredAgents.map((agent) => {
                     const agentStatus =
-                        agentStates[agent.agent_status?.id] ||
-                        agentStates[agent.agent_status?.name] || 
+                        (agent.agent_status ? agentStates[agent.agent_status.id] : undefined) ||
+                        (agent.agent_status?.name ? agentStates[agent.agent_status.name] : undefined) || 
                         "Desconhecido";
 
                     return (

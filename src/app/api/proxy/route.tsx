@@ -17,7 +17,7 @@ export async function GET() {
 
         const data = await response.json();
         return Response.json(data);
-    } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return Response.json({ error: (error as Error).message }, { status: 500 });
     }
 }

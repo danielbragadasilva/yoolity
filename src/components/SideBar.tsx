@@ -10,7 +10,7 @@ const Turno = () => <p>⏰ Informações sobre Turnos!</p>;
 const Ranking = () => <p>🏆 Ranking atualizado!</p>;
 
 const Sidebar = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState<keyof typeof content>("dashboard");
 
   const content = {
     dashboard: <Dashboard />,
@@ -29,7 +29,7 @@ const Sidebar = () => {
           {Object.keys(content).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as keyof typeof content)}
               className={`block w-full text-left p-3 rounded-lg text-white font-semibold hover:bg-primary-darker ${
                 activeTab === tab ? "bg-primary-dark font-bold" : ""
               }`}
@@ -42,7 +42,7 @@ const Sidebar = () => {
 
       {/* Área de Conteúdo */}
       <div className="mx-auto">
-        <div className="bg-white p-6 rounded-lg shadow-md">{content[activeTab]}</div>
+        <div className="bg-white p-6 rounded-lg shadow-md">{content[activeTab as keyof typeof content]}</div>
       </div>
     </div>
   );
