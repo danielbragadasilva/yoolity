@@ -13,33 +13,73 @@ const agentStates = {
 
 const AgentsList = () => {
     const [agents, setAgents] = useState([]);
+    const [filteredAgents, setFilteredAgents] = useState([]);
+    const [search, setSearch] = useState("");
+
+    // Função para buscar os agentes
+    const fetchAgents = async () => {
+        try {
+            const response = await fetch("/api/proxy"); // Mantendo o fetch na API do Next.js
+            const data = await response.json();
+            setAgents(data.agents || []);
+            setFilteredAgents(data.agents || []);
+        } catch (error) {
+            console.error("Erro ao buscar agentes:", error);
+        }
+    };
 
     useEffect(() => {
-        const fetchAgents = async () => {
-            try {
-                const response = await fetch("/api/proxy"); // Use um endpoint do Next.js para segurança
-                const data = await response.json();
-                setAgents(data.agents || []);
-            } catch (error) {
-                console.error("Erro ao buscar agentes:", error);
-            }
-        };
-
         fetchAgents();
     }, []);
 
+    // Função para filtrar os agentes
+    const handleSearch = (event) => {
+        const value = event.target.value.toLowerCase();
+        setSearch(value);
+
+        const filtered = agents.filter(agent =>
+            (agent.first_name + " " + agent.last_name).toLowerCase().includes(value) ||
+            agent.email.toLowerCase().includes(value) ||
+            (agentStates[agent.agent_status?.id] || "").toLowerCase().includes(value)
+        );
+
+        setFilteredAgents(filtered);
+    };
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {agents.map((agent) => (
-                <div key={agent.id} className="bg-white shadow-lg rounded-xl p-4 border-gray-400 border-1">
-                    <h3 className="text-xl font-bold">{agent.first_name} {agent.last_name}</h3>
-                    <p className="text-primary-darkin text-[10px]">{agent.email}</p>
-                    <p className="text-sm font-semibold text-gray-500">Status: {agentStates[agent.agent_status?.id] || agent.agent_status?.name || "Desconhecido"}</p>
-                    <p className={`mt-2 text-sm font-medium ${agent.login_status ? "text-green-600" : "text-red-600"}`}>
-                            {agent.login_status ? "Online" : "Offline"}
+        <div className="p-4">
+            {/* Filtros */}
+            <div className="mb-4 flex flex-col md:flex-row gap-2">
+                <input
+                    type="text"
+                    placeholder="🔎 Buscar por nome, e-mail ou status..."
+                    className="p-2 border rounded-md w-full md:w-1/2"
+                    value={search}
+                    onChange={handleSearch}
+                />
+                <button
+                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md"
+                    onClick={fetchAgents}
+                >
+                    🔄 Atualizar
+                </button>
+            </div>
+
+            {/* Lista de agentes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAgents.map((agent) => (
+                    <div key={agent.id} className="bg-white shadow-lg rounded-xl p-4 border-gray-400 border-1">
+                        <h3 className="text-xl font-bold">{agent.first_name} {agent.last_name}</h3>
+                        <p className="text-primary-darkin text-[10px]">{agent.email}</p>
+                        <p className="text-sm font-semibold text-gray-500">
+                            Status: {agentStates[agent.agent_status?.id] || agent.agent_status?.name || "Desconhecido"}
                         </p>
-                </div>
-            ))}
+                        <p className={`mt-2 text-sm font-medium ${agent.login_status ? "text-green-600" : "text-red-600"}`}>
+                            {agent.login_status ? "🟢 Online" : "🔴 Offline"}
+                        </p>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };
