@@ -27,7 +27,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <SidebarHeader className="border-b border-border p-4">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold">Support CRM</h1>
+              <h1 className="text-xl font-bold">Yoolity</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
