@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { BarChart3, Users, MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react"
+import { BarChart3,  MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   SidebarProvider,
@@ -22,7 +22,7 @@ import { ChallengePage } from "@/app/challenge/page"
 import { ThemeToggle } from "./Themetoggle"
 import { DashboardPage } from "@/app/dashboard/page"
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+export function DashboardLayout({ }: { children: React.ReactNode }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderTab = () => {
