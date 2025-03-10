@@ -17,10 +17,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { FreshChatTab } from "@/app/freshchat/page"
-import { EscalasPage } from "@/app/escalas/page"
-import { ChallengePage } from "@/app/challenge/page"
+
+
 import { ThemeToggle } from "./Themetoggle"
-import { DashboardPage } from "@/app/dashboard/page"
+import EscalasPage from "@/app/escalas/page"
+import ChallengePage from "@/app/challenge/page"
+import DashboardPage from "@/app/dashboard/page"
+
 
 export function DashboardLayout({ }: { children: React.ReactNode }) {
   const [activeTab, setActiveTab] = useState("dashboard");
