@@ -1,7 +1,3 @@
-export function EscalasPage() {
-  return (
-    <div>
-      <h1>Escalas Page</h1>
-    </div>
-  );
+export default function EscalasPage() {
+  return <div>Escalas Page</div>;
 }
