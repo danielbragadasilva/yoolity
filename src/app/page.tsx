@@ -1,10 +1,10 @@
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { FreshChatTab } from "@/components/fresh-chat-tab"
+import { FreshChatTab } from "./freshchat/page"
 
 export default function Home() {
   return (
     <DashboardLayout>
-      <FreshChatTab />
+      {/* <FreshChatTab /> */}
     </DashboardLayout>
   )
 }

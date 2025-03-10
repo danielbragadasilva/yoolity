@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { BarChart3, Users, MessageSquare, Trophy, Settings } from "lucide-react"
+import { BarChart3, Users, MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   SidebarProvider,
@@ -16,9 +16,27 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { FreshChatTab } from "@/app/freshchat/page"
+import { EscalasPage } from "@/app/escalas/page"
+import { ChallengePage } from "@/app/challenge/page"
+import { ThemeToggle } from "./Themetoggle"
+import { DashboardPage } from "@/app/dashboard/page"
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [activeTab, setActiveTab] = useState("freshchat")
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case "freshchat":
+        return <FreshChatTab />;
+      case "escala":
+        return <EscalasPage />;
+      case "challenge":
+        return <ChallengePage/> ;
+      default:
+        return <DashboardPage />;
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -40,20 +58,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={activeTab === "freshchat"} onClick={() => setActiveTab("freshchat")}>
-                  <MessageSquare className="h-5 w-5" />
-                  <span>FreshChat</span>
+                  <LocateFixed className="h-5 w-5" />
+                  <span>Monitor FreshChat</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "agents"} onClick={() => setActiveTab("agents")}>
-                  <Users className="h-5 w-5" />
-                  <span>Agents</span>
+                <SidebarMenuButton isActive={activeTab === "Controle de escala"} onClick={() => setActiveTab("escala")}>
+                  <CalendarFold className="h-5 w-5" />
+                  <span>Escala</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "gamification"} onClick={() => setActiveTab("gamification")}>
+                <SidebarMenuButton isActive={activeTab === "Challenge Yoo"} onClick={() => setActiveTab("challenge")}>
                   <Trophy className="h-5 w-5" />
-                  <span>Gamification</span>
+                  <span>Challenge Yoo</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -77,8 +95,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <h2 className="text-lg font-semibold">
                 {activeTab === "dashboard" && "Dashboard"}
                 {activeTab === "freshchat" && "FreshChat"}
-                {activeTab === "agents" && "Agents"}
-                {activeTab === "gamification" && "Gamification"}
+                {activeTab === "escala" && "Controle de escala"}
+                {activeTab === "challenge" && "Challenge Yoo"}
               </h2>
             </div>
             <div className="flex items-center gap-4">
@@ -86,9 +104,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 Help
               </Button>
               <Button size="sm">Admin</Button>
+              <ThemeToggle />
             </div>
           </header>
-          <main className="flex-1 p-4 lg:p-6">{children}</main>
+          <main className="flex-1 p-4 lg:p-6">{renderTab()}</main>
         </div>
       </div>
     </SidebarProvider>

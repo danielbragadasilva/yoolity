@@ -80,10 +80,10 @@ export function FreshChatTab() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Agent Status</h1>
+        <h1 className="text-[15px] font-semibold">Agentes no FreshChat</h1>
         <Button variant="outline" size="sm" className="gap-2" onClick={fetchAgents}>
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          Atualizar
         </Button>
       </div>
 
@@ -91,7 +91,7 @@ export function FreshChatTab() {
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name or email..."
+            placeholder="Pesquisar por nome ou e-mail..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -100,10 +100,10 @@ export function FreshChatTab() {
 
         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusType)}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">Todos os status</SelectItem>
             <SelectItem value="feedback">💙 Feedback</SelectItem>
             <SelectItem value="meeting">👥 Reunião/Treinamento</SelectItem>
             <SelectItem value="yoga">⏰ Yooga Time</SelectItem>
@@ -117,10 +117,10 @@ export function FreshChatTab() {
 
         <Select value={availability} onValueChange={(value) => setAvailability(value as "all" | "online" | "offline")}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by availability" />
+            <SelectValue placeholder="Filtrar por disponibilidade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="online">Online</SelectItem>
             <SelectItem value="offline">Offline</SelectItem>
           </SelectContent>
@@ -132,7 +132,7 @@ export function FreshChatTab() {
           filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} />)
         ) : (
           <div className="col-span-full flex h-40 items-center justify-center rounded-lg border border-dashed">
-            <p className="text-muted-foreground">No agents match the current filters</p>
+            <p className="text-muted-foreground">Nenhum agente corresponde aos filtros atuais</p>
           </div>
         )}
       </div>
