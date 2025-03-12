@@ -1,3 +1,3 @@
 export default function EscalasPage() {
-  return <div>Escalas Page</div>;
+  return <div>Escalas Page em construção🚧</div>;
 }

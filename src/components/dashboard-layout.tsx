@@ -1,10 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { BarChart3,  MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import type React from "react";
+import { useState } from "react";
+import { BarChart3, MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   SidebarProvider,
   Sidebar,
@@ -15,17 +14,14 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { FreshChatTab } from "@/app/freshchat/page"
+} from "@/components/ui/sidebar";
+import { FreshChatTab } from "@/app/freshchat/page";
+import { ThemeToggle } from "./Themetoggle";
+import EscalasPage from "@/app/escalas/page";
+import ChallengePage from "@/app/challenge/page";
+import DashboardPage from "@/app/dashboard/page";
 
-
-import { ThemeToggle } from "./Themetoggle"
-import EscalasPage from "@/app/escalas/page"
-import ChallengePage from "@/app/challenge/page"
-import DashboardPage from "@/app/dashboard/page"
-
-
-export function DashboardLayout({ }: { children: React.ReactNode }) {
+export function DashboardLayout({}: { children: React.ReactNode }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderTab = () => {
@@ -35,7 +31,7 @@ export function DashboardLayout({ }: { children: React.ReactNode }) {
       case "escala":
         return <EscalasPage />;
       case "challenge":
-        return <ChallengePage/> ;
+        return <ChallengePage />;
       default:
         return <DashboardPage />;
     }
@@ -43,7 +39,8 @@ export function DashboardLayout({ }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-muted/40">
+      <div className="flex min-h-screen w-full bg-muted/40">
+        {/* Sidebar */}
         <Sidebar>
           <SidebarHeader className="border-b border-border p-4">
             <div className="flex items-center gap-2">
@@ -66,13 +63,13 @@ export function DashboardLayout({ }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "Controle de escala"} onClick={() => setActiveTab("escala")}>
+                <SidebarMenuButton isActive={activeTab === "escala"} onClick={() => setActiveTab("escala")}>
                   <CalendarFold className="h-5 w-5" />
                   <span>Escala</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "Challenge Yoo"} onClick={() => setActiveTab("challenge")}>
+                <SidebarMenuButton isActive={activeTab === "challenge"} onClick={() => setActiveTab("challenge")}>
                   <Trophy className="h-5 w-5" />
                   <span>Challenge Yoo</span>
                 </SidebarMenuButton>
@@ -91,8 +88,10 @@ export function DashboardLayout({ }: { children: React.ReactNode }) {
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex-1">
-          <header className="flex h-16 items-center justify-between border-b border-border bg-background px-4 lg:px-6">
+        {/* Conteúdo Principal */}
+        <div className="flex flex-col w-full min-h-screen">
+          {/* Header */}
+          <header className="flex h-16 w-full items-center justify-between border-b border-border bg-background px-4 lg:px-6">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="lg:hidden" />
               <h2 className="text-lg font-semibold">
@@ -106,14 +105,14 @@ export function DashboardLayout({ }: { children: React.ReactNode }) {
               <Button variant="outline" size="sm">
                 Help
               </Button>
-              <Button size="sm">Admin</Button>
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex-1 p-4 lg:p-6">{renderTab()}</main>
+
+          {/* Main Content */}
+          <main className="flex-1 w-full p-4 lg:p-6">{renderTab()}</main>
         </div>
       </div>
     </SidebarProvider>
-  )
+  );
 }
-
