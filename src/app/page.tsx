@@ -1,11 +1,9 @@
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { FreshChatTab } from "./freshchat/page"
+import LoginPage from "./login/page"
 
 export default function Home() {
   return (
-    <DashboardLayout>
-      <FreshChatTab />
-    </DashboardLayout>
+
+    <LoginPage/>
   )
 }
 

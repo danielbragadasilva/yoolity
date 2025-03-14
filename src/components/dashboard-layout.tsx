@@ -2,7 +2,12 @@
 
 import type React from "react";
 import { useState } from "react";
-import { BarChart3, MessageSquare, Trophy, Settings, LocateFixed, CalendarFold } from "lucide-react";
+import { useRouter } from "next/navigation"; // Importa roteamento do Next.js
+import { supabase } from "@/utils/supabaseClient"; // Importa o cliente do Supabase
+import { 
+  BarChart3, MessageSquare, Trophy, LocateFixed, 
+  CalendarFold, LogOut 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   SidebarProvider,
@@ -22,7 +27,13 @@ import ChallengePage from "@/app/challenge/page";
 import DashboardPage from "@/app/dashboard/page";
 
 export function DashboardLayout({}: { children: React.ReactNode }) {
+  const router = useRouter(); // Inicializa o roteador do Next.js
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut(); // Faz logout no Supabase
+    router.push("/login"); // Redireciona para a tela de login
+  };
 
   const renderTab = () => {
     switch (activeTab) {
@@ -79,9 +90,9 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
           <SidebarFooter className="border-t border-border p-4">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
+                <SidebarMenuButton onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                  <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
