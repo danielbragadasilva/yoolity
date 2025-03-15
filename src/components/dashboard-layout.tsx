@@ -23,8 +23,9 @@ import {
 import { FreshChatTab } from "@/app/freshchat/page";
 import { ThemeToggle } from "./Themetoggle";
 import EscalasPage from "@/app/escalas/page";
-import ChallengePage from "@/app/challenge/page";
+
 import DashboardPage from "@/app/dashboard/page";
+import ChallengePage from "@/app/challenge/page";
 
 export function DashboardLayout({}: { children: React.ReactNode }) {
   const router = useRouter(); // Inicializa o roteador do Next.js
