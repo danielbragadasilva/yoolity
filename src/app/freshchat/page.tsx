@@ -28,7 +28,7 @@ type Agent = {
   login_status: boolean;
 };
 
-export function FreshChatTab() {
+function FreshChatTab() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusType>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -138,4 +138,9 @@ export function FreshChatTab() {
       </div>
     </div>
   );
+}
+
+// Exportação padrão necessária para arquivos de página no Next.js
+export default function Page() {
+  return <FreshChatTab />;
 }

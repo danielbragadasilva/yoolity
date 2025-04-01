@@ -37,7 +37,7 @@ export function SupervisorDashboard() {
       description: "TMA inicial - 22 minutos",
       points: 100,
       difficulty: "medium",
-      status: "active",
+      status: "ativo",
     },
     {
       id: "2",
@@ -45,7 +45,7 @@ export function SupervisorDashboard() {
       description: "Manter uma taxa de satisfação do cliente de pelo menos 95% durante a semana",
       points: 200,
       difficulty: "hard",
-      status: "active",
+      status: "ativo",
     },
     {
       id: "3",
@@ -53,7 +53,7 @@ export function SupervisorDashboard() {
       description: "Instalar uma impressora daruma dr700 em menos de 20 minutos",
       points: 50,
       difficulty: "easy",
-      status: "active",
+      status: "ativo",
     },
   ])
 
@@ -65,7 +65,7 @@ export function SupervisorDashboard() {
     description: "",
     points: 0,
     difficulty: "medium",
-    status: "active",
+    status: "ativo",
   })
 
   const handleAddTask = () => {
@@ -84,7 +84,7 @@ export function SupervisorDashboard() {
       description: "",
       points: 0,
       difficulty: "medium",
-      status: "active",
+      status: "ativo",
     })
     setEditingTask(null)
     setIsOpen(false)
@@ -133,7 +133,7 @@ export function SupervisorDashboard() {
                   description: "",
                   points: 0,
                   difficulty: "medium",
-                  status: "active",
+                  status: "ativo",
                 })
               }}
             >
@@ -208,14 +208,14 @@ export function SupervisorDashboard() {
                 </Label>
                 <Select
                   value={newTask.status}
-                  onValueChange={(value: "active" | "inactive") => setNewTask({ ...newTask, status: value })}
+                  onValueChange={(value: "ativo" | "inativo") => setNewTask({ ...newTask, status: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="ativo">Ativo</SelectItem>
+                    <SelectItem value="inativo">Inativo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -258,7 +258,7 @@ export function SupervisorDashboard() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={task.status === "active" ? "default" : "secondary"}>
+                    <Badge variant={task.status === "ativo" ? "default" : "secondary"}>
                       {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                     </Badge>
                   </TableCell>
