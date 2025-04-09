@@ -15,7 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,16 +42,10 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       return;
     }
 
-    // Aguarda a sessão ser salva antes de redirecionar
-    const { data: sessionData } = await supabase.auth.getSession();
-
-    if (sessionData.session) {
-      router.push("/control");
-    } else {
-      setError("Erro ao autenticar. Tente novamente.");
-    }
-
-    setLoading(false);
+    // Aguarda a sessão e redireciona após um pequeno delay
+    setTimeout(() => {
+      router.replace("/control");
+    }, 300);
   };
 
   return (
@@ -66,7 +63,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="seuemail@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
