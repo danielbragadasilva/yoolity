@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation"; // Importa roteamento do Next.js
 import { supabase } from "@/utils/supabaseClient"; // Importa o cliente do Supabase
 import { 
   BarChart3, MessageSquare, Trophy, LocateFixed, 
-  CalendarFold, LogOut 
+  CalendarFold, LogOut, 
+  UsersRound,
+  LaptopMinimal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +28,7 @@ import EscalasPage from "@/app/escalas/page";
 
 import DashboardPage from "@/app/dashboard/page";
 import ChallengePage from "@/app/challenge/page";
+import Users from "@/app/users/page";
 
 export function DashboardLayout({}: { children: React.ReactNode }) {
   const router = useRouter(); // Inicializa o roteador do Next.js
@@ -44,6 +47,8 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
         return <EscalasPage />;
       case "challenge":
         return <ChallengePage />;
+      case "users":
+        return <Users />;
       default:
         return <DashboardPage />;
     }
@@ -70,8 +75,8 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={activeTab === "freshchat"} onClick={() => setActiveTab("freshchat")}>
-                  <LocateFixed className="h-5 w-5" />
-                  <span>Monitor FreshChat</span>
+                  <LaptopMinimal className="h-5 w-5" />
+                  <span>Monitor</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -84,6 +89,12 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                 <SidebarMenuButton isActive={activeTab === "challenge"} onClick={() => setActiveTab("challenge")}>
                   <Trophy className="h-5 w-5" />
                   <span>Challenge Yoo</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "users"} onClick={() => setActiveTab("users")}>
+                  <UsersRound className="h-5 w-5" />
+                  <span>Usuários</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
