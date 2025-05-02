@@ -23,7 +23,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { FreshChatTab } from "@/app/freshchat/page";
+import FreshChatTab from "@/app/freshchat/page";
 import { ThemeToggle } from "./Themetoggle";
 import EscalasPage from "@/app/escalas/page";
 

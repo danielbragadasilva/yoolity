@@ -62,7 +62,7 @@ export function AgentDashboard() {
     },
   ])
 
-  const [achievements, setAchievements] = useState<Achievement[]>([
+  const [achievements] = useState<Achievement[]>([
     {
       id: "1",
       title: "Primeira Resposta",

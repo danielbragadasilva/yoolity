@@ -18,6 +18,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import Image from "next/image" // Importação do componente Image do Next.js
 
 type Product = {
   id: string
@@ -72,7 +73,7 @@ export function Marketplace() {
       name: "Almoço VIP",
       description: "Almoce com lideranças do time",
       points: 500,
-      category: "experiences",
+      category: "experience",
       image: "https://ui.shadcn.com/placeholder.svg?height=100&width=100",
       stock: 2,
     },
@@ -108,7 +109,7 @@ export function Marketplace() {
       name: "Almoço de Equipe",
       description: "Almoço para toda a sua equipe",
       points: 300,
-      category: "experiences",
+      category: "experience",
       image: "https://ui.shadcn.com/placeholder.svg?height=100&width=100",
       stock: 4,
     },
@@ -244,10 +245,12 @@ export function Marketplace() {
                   {cart.map((item) => (
                     <div key={item.product.id} className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
-                        <img
+                        <Image
                           src={item.product.image || "https://ui.shadcn.com/placeholder.svg"}
                           alt={item.product.name}
-                          className="h-12 w-12 rounded-md object-cover"
+                          width={48}
+                          height={48}
+                          className="rounded-md object-cover"
                         />
                         <div>
                           <p className="font-medium">{item.product.name}</p>
@@ -392,11 +395,14 @@ export function Marketplace() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden">
-                <img
-                  src={product.image || "https://ui.shadcn.com/placeholder.svg"}
-                  alt={product.name}
-                  className="h-40 w-full object-cover"
-                />
+                <div className="relative h-40 w-full">
+                  <Image
+                    src={product.image || "https://ui.shadcn.com/placeholder.svg"}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{product.name}</CardTitle>
@@ -457,11 +463,14 @@ export function Marketplace() {
               <DialogDescription>{selectedProduct.description}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <img
-                src={selectedProduct.image || "https://ui.shadcn.com/placeholder.svg"}
-                alt={selectedProduct.name}
-                className="h-48 w-full object-cover rounded-md"
-              />
+              <div className="relative h-48 w-full">
+                <Image
+                  src={selectedProduct.image || "https://ui.shadcn.com/placeholder.svg"}
+                  alt={selectedProduct.name}
+                  fill
+                  className="object-cover rounded-md"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Categoria</p>
@@ -506,4 +515,3 @@ export function Marketplace() {
     </div>
   )
 }
-
