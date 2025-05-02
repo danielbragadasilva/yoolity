@@ -96,12 +96,6 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "users"} onClick={() => setActiveTab("users")}>
-                  <UsersRound className="h-5 w-5" />
-                  <span>Usuários</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
                 <SidebarMenuButton isActive={activeTab === "wiki"} onClick={() => setActiveTab("wiki")}>
                   <BookOpenText className="h-5 w-5" />
                   <span>Wiki</span>
