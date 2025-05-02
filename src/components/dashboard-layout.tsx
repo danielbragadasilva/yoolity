@@ -8,7 +8,8 @@ import {
   BarChart3, MessageSquare, Trophy, LocateFixed, 
   CalendarFold, LogOut, 
   UsersRound,
-  LaptopMinimal
+  LaptopMinimal,
+  BookOpenText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import EscalasPage from "@/app/escalas/page";
 import DashboardPage from "@/app/dashboard/page";
 import ChallengePage from "@/app/challenge/page";
 import Users from "@/app/users/page";
+import Wiki from "@/app/wiki/page";
 
 export function DashboardLayout({}: { children: React.ReactNode }) {
   const router = useRouter(); // Inicializa o roteador do Next.js
@@ -49,6 +51,8 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
         return <ChallengePage />;
       case "users":
         return <Users />;
+        case "wiki":
+          return <Wiki />;
       default:
         return <DashboardPage />;
     }
@@ -95,6 +99,12 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                 <SidebarMenuButton isActive={activeTab === "users"} onClick={() => setActiveTab("users")}>
                   <UsersRound className="h-5 w-5" />
                   <span>Usuários</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "wiki"} onClick={() => setActiveTab("wiki")}>
+                  <BookOpenText className="h-5 w-5" />
+                  <span>Wiki</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
