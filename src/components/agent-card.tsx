@@ -16,7 +16,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
     "633ef7ea-a1ce-4b27-8392-59d889bc364c": "💙Feedback💙",
     "bc87d9ab-5182-4262-869d-3c15becafed7": "👥Reunião/Treinamento👥",
     "89a84427-67ba-49ef-a29c-9bd3438bf314": "⏰Yooga Time⏰",
-    "08c972df-8a8b-478f-9312-19ba67d7dc79": "🚨Pausa - Aprovada pela Supervisão🚨",
+    "08c972df-8a8b-478f-9312-19ba67d7dc79": "🚨Pausa - Aprovada🚨",
     "78de2fb5-cdeb-4876-8bfd-93bf6f4690b3": "💧Água/Banheiro💩",
     "0e6d80bf-aa09-40e7-bc6d-0e8b2f189298": "💼Demandas Externas💼",
     "Active on Intelli Assign": "✅ Disponível",

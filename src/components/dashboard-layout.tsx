@@ -1,13 +1,12 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Importa roteamento do Next.js
-import { supabase } from "@/utils/supabaseClient"; // Importa o cliente do Supabase
-import { 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabaseClient";
+import {
   BarChart3, MessageSquare, Trophy,
-  CalendarFold, LogOut,
-  LaptopMinimal,
+  CalendarFold, LogOut, LaptopMinimal,
   BookOpenText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,39 +24,72 @@ import {
 import FreshChatTab from "@/app/freshchat/page";
 import { ThemeToggle } from "./Themetoggle";
 import EscalasPage from "@/app/escalas/page";
-
 import DashboardPage from "@/app/dashboard/page";
 import ChallengePage from "@/app/challenge/page";
 import Wiki from "@/app/wiki/page";
 
 export function DashboardLayout({}: { children: React.ReactNode }) {
-  const router = useRouter(); // Inicializa o roteador do Next.js
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [role, setRole] = useState<string | null>(null);
+
+  // Fetch user role ao carregar
+  useEffect(() => {
+    const fetchRole = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        router.push("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (error || !data) {
+        console.error("Erro ao buscar role do usuário:", error);
+        router.push("/unauthorized");
+        return;
+      }
+
+      setRole(data.role);
+    };
+
+    fetchRole();
+  }, [router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut(); // Faz logout no Supabase
-    router.push("/login"); // Redireciona para a tela de login
+    await supabase.auth.signOut();
+    router.push("/login");
   };
 
   const renderTab = () => {
     switch (activeTab) {
       case "freshchat":
-        return <FreshChatTab />;
+        return role !== "agente" ? <FreshChatTab /> : <Unauthorized />;
       case "escala":
-        return <EscalasPage />;
+        return role === "agente" || role === "supervisor" || role === "coordenador" ? <EscalasPage /> : <Unauthorized />;
       case "challenge":
         return <ChallengePage />;
-        case "wiki":
-          return <Wiki />;
+      case "wiki":
+        return <Wiki />;
       default:
         return <DashboardPage />;
     }
   };
 
+  if (!role) {
+    return <div className="p-6">Carregando...</div>;
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/40">
-        {/* Sidebar */}
         <Sidebar>
           <SidebarHeader className="border-b border-border p-4">
             <div className="flex items-center gap-2">
@@ -73,24 +105,32 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                   <span>Dashboard</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "freshchat"} onClick={() => setActiveTab("freshchat")}>
-                  <LaptopMinimal className="h-5 w-5" />
-                  <span>Monitor</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "escala"} onClick={() => setActiveTab("escala")}>
-                  <CalendarFold className="h-5 w-5" />
-                  <span>Escala</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+
+              {role !== "agente" && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "freshchat"} onClick={() => setActiveTab("freshchat")}>
+                    <LaptopMinimal className="h-5 w-5" />
+                    <span>Monitor</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {(role === "coordenador" || role === "supervisor") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "escala"} onClick={() => setActiveTab("escala")}>
+                    <CalendarFold className="h-5 w-5" />
+                    <span>Escala</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={activeTab === "challenge"} onClick={() => setActiveTab("challenge")}>
                   <Trophy className="h-5 w-5" />
                   <span>Challenge Yoo</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton isActive={activeTab === "wiki"} onClick={() => setActiveTab("wiki")}>
                   <BookOpenText className="h-5 w-5" />
@@ -113,7 +153,6 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
 
         {/* Conteúdo Principal */}
         <div className="flex flex-col w-full min-h-screen">
-          {/* Header */}
           <header className="flex h-16 w-full items-center justify-between border-b border-border bg-background px-4 lg:px-6">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="lg:hidden" />
@@ -122,20 +161,27 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                 {activeTab === "freshchat" && "FreshChat"}
                 {activeTab === "escala" && "Controle de escala"}
                 {activeTab === "challenge" && "Challenge Yoo"}
+                {activeTab === "wiki" && "Wiki"}
               </h2>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
-                Help
-              </Button>
+              <Button variant="outline" size="sm">Help</Button>
               <ThemeToggle />
             </div>
           </header>
 
-          {/* Main Content */}
           <main className="flex-1 w-full p-4 lg:p-6">{renderTab()}</main>
         </div>
       </div>
     </SidebarProvider>
+  );
+}
+
+function Unauthorized() {
+  return (
+    <div className="text-center p-8">
+      <h2 className="text-2xl font-bold">Acesso não autorizado</h2>
+      <p className="mt-2">Você não tem permissão para acessar este conteúdo.</p>
+    </div>
   );
 }

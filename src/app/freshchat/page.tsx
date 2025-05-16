@@ -4,7 +4,13 @@ import { useState, useEffect } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AgentCard } from "@/components/agent-card";
 
 type StatusType =
@@ -26,6 +32,7 @@ type Agent = {
   avatar: { url: string };
   agent_status?: { id: string; name: string };
   login_status: boolean;
+  role_id?: string;
 };
 
 function FreshChatTab() {
@@ -34,7 +41,12 @@ function FreshChatTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [availability, setAvailability] = useState<"all" | "online" | "offline">("all");
 
-  // Função para buscar os agentes da API
+  // IDs de role permitidas
+  const allowedRoles = [
+    "855dd18d-0b29-4f2a-a6ad-931027963b9d",
+    "72bf957d-f2b7-41db-aa6f-8146351e4685",
+  ];
+
   const fetchAgents = async () => {
     try {
       const response = await fetch("/api/proxy");
@@ -50,6 +62,9 @@ function FreshChatTab() {
   }, []);
 
   const filteredAgents = agents.filter((agent) => {
+    // Filtrar por role_id
+    if (!allowedRoles.includes(agent.role_id || "")) return false;
+
     // Filtrar pelo status
     if (statusFilter !== "all" && statusFilter !== "available" && statusFilter !== "unavailable") {
       if (statusFilter === "feedback" && agent.agent_status?.id !== "633ef7ea-a1ce-4b27-8392-59d889bc364c") return false;
@@ -140,7 +155,6 @@ function FreshChatTab() {
   );
 }
 
-// Exportação padrão necessária para arquivos de página no Next.js
 export default function Page() {
   return <FreshChatTab />;
 }

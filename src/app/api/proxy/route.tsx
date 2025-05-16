@@ -1,5 +1,5 @@
 export async function GET() {
-    const API_URL = "https://yoogatecnologia.freshchat.com/v2/agents?items_per_page=44";
+    const API_URL = "https://yoogatecnologia.freshchat.com/v2/agents?items_per_page=100";
     const BEARER_TOKEN = process.env.FRESHCHAT_BEARER_TOKEN;
 
     if (!BEARER_TOKEN) {

@@ -31,21 +31,39 @@ export function LoginForm({
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // 1. Realiza o login
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (loginError || !loginData.session) {
       setError("Credenciais inválidas. Tente novamente.");
       setLoading(false);
       return;
     }
 
-    // Aguarda a sessão e redireciona após um pequeno delay
-    setTimeout(() => {
-      router.replace("/control");
-    }, 300);
+    // 2. Pega o ID do usuário logado
+    const userId = loginData.session.user.id;
+
+    // 3. Busca a role na tabela user_roles
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (roleError || !roleData) {
+      setError("Erro ao buscar a permissão do usuário.");
+      setLoading(false);
+      return;
+    }
+
+    // 4. Armazena a role localmente
+    localStorage.setItem("user_role", roleData.role);
+
+    // 5. Redireciona para /control
+    router.replace("/control");
   };
 
   return (
