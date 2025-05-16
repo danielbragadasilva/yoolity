@@ -16,7 +16,6 @@ export async function middleware(req: NextRequest) {
   // Recupera o usuário
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
   console.log("🟢 Middleware: Usuário", user?.email);
@@ -26,7 +25,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Recupera a role do Supabase
-  const { data: roleData, error: roleError } = await supabase
+  const { data: roleData } = await supabase
     .from("user_roles")
     .select("role")
     .eq("id", user.id)
