@@ -35,13 +35,43 @@ type Agent = {
   role_id?: string;
 };
 
+function handleTrack(agents: Agent[]) {
+  const local = localStorage.getItem("agents_status");
+  const current: Record<
+    string,
+    {
+      status_id: string;
+      last_updated: string;
+    }
+  > = local ? JSON.parse(local) : {};
+
+  const now = new Date().toISOString();
+
+  agents.forEach((agent) => {
+    const currentId = agent.agent_status?.id || agent.agent_status?.name || "Inactive on Intelli Assign";
+
+    if (!current[agent.id]) {
+      current[agent.id] = {
+        status_id: currentId,
+        last_updated: now,
+      };
+    } else if (current[agent.id].status_id !== currentId) {
+      current[agent.id] = {
+        status_id: currentId,
+        last_updated: now,
+      };
+    }
+  });
+
+  localStorage.setItem("agents_status", JSON.stringify(current));
+}
+
 function FreshChatTab() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [availability, setAvailability] = useState<"all" | "online" | "offline">("all");
 
-  // IDs de role permitidas
   const allowedRoles = [
     "855dd18d-0b29-4f2a-a6ad-931027963b9d",
     "72bf957d-f2b7-41db-aa6f-8146351e4685",
@@ -52,6 +82,7 @@ function FreshChatTab() {
       const response = await fetch("/api/proxy");
       const data = await response.json();
       setAgents(data.agents || []);
+      handleTrack(data.agents || []);
     } catch (error) {
       console.error("Erro ao buscar agentes:", error);
     }
@@ -62,25 +93,31 @@ function FreshChatTab() {
   }, []);
 
   const filteredAgents = agents.filter((agent) => {
-    // Filtrar por role_id
     if (!allowedRoles.includes(agent.role_id || "")) return false;
 
-    // Filtrar pelo status
-    if (statusFilter !== "all" && statusFilter !== "available" && statusFilter !== "unavailable") {
-      if (statusFilter === "feedback" && agent.agent_status?.id !== "633ef7ea-a1ce-4b27-8392-59d889bc364c") return false;
-      if (statusFilter === "meeting" && agent.agent_status?.id !== "bc87d9ab-5182-4262-869d-3c15becafed7") return false;
-      if (statusFilter === "yoga" && agent.agent_status?.id !== "89a84427-67ba-49ef-a29c-9bd3438bf314") return false;
-      if (statusFilter === "approved-break" && agent.agent_status?.id !== "08c972df-8a8b-478f-9312-19ba67d7dc79") return false;
-      if (statusFilter === "bathroom" && agent.agent_status?.id !== "78de2fb5-cdeb-4876-8bfd-93bf6f4690b3") return false;
-      if (statusFilter === "external" && agent.agent_status?.id !== "0e6d80bf-aa09-40e7-bc6d-0e8b2f189298") return false;
+    if (
+      statusFilter !== "all" &&
+      statusFilter !== "available" &&
+      statusFilter !== "unavailable"
+    ) {
+      const statusMap: Record<string, string> = {
+        feedback: "633ef7ea-a1ce-4b27-8392-59d889bc364c",
+        meeting: "bc87d9ab-5182-4262-869d-3c15becafed7",
+        yoga: "89a84427-67ba-49ef-a29c-9bd3438bf314",
+        "approved-break": "08c972df-8a8b-478f-9312-19ba67d7dc79",
+        bathroom: "78de2fb5-cdeb-4876-8bfd-93bf6f4690b3",
+        external: "0e6d80bf-aa09-40e7-bc6d-0e8b2f189298",
+      };
+      if (agent.agent_status?.id !== statusMap[statusFilter]) return false;
     }
 
-    // Filtrar pela disponibilidade
-    if (availability !== "all" && agent.login_status !== (availability === "online")) {
+    if (
+      availability !== "all" &&
+      agent.login_status !== (availability === "online")
+    ) {
       return false;
     }
 
-    // Filtrar pela busca
     if (
       searchQuery &&
       !agent.first_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
