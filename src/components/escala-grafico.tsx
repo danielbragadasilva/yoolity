@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -12,14 +12,20 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Cell,
-} from "recharts"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+} from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 // Função para formatar horas (0-24) para exibição no gráfico
 const formatHora = (hora: number) => {
-  return `${hora.toString().padStart(2, "0")}:00`
-}
+  return `${hora.toString().padStart(2, "0")}:00`;
+};
 
 // Tipos de status do Fresh
 type FreshStatus =
@@ -31,7 +37,7 @@ type FreshStatus =
   | "demandas"
   | "disponivel"
   | "indisponivel"
-  | "offline"
+  | "offline";
 
 // Função para gerar dados de horário para um agente
 const gerarHorarioAgente = (
@@ -39,7 +45,7 @@ const gerarHorarioAgente = (
   inicio: number,
   fim: number,
   status: "ativo" | "troca" | "folga" = "ativo",
-  freshStatus: FreshStatus = "offline",
+  freshStatus: FreshStatus = "offline"
 ) => {
   return {
     nome,
@@ -48,8 +54,8 @@ const gerarHorarioAgente = (
     duracao: fim - inicio,
     status,
     freshStatus,
-  }
-}
+  };
+};
 
 // Mapeamento de cores para os status do Fresh
 const freshStatusColors: Record<FreshStatus, string> = {
@@ -62,7 +68,7 @@ const freshStatusColors: Record<FreshStatus, string> = {
   disponivel: "#10b981", // ✅ Verde
   indisponivel: "#f43f5e", // ❌ Rosa
   offline: "#9ca3af", // Cinza (quando não está em nenhum status)
-}
+};
 
 // Mapeamento de ícones para os status do Fresh
 const freshStatusIcons: Record<FreshStatus, string> = {
@@ -75,7 +81,7 @@ const freshStatusIcons: Record<FreshStatus, string> = {
   disponivel: "✅",
   indisponivel: "❌",
   offline: "⚪",
-}
+};
 
 // Mapeamento de descrições para os status do Fresh
 const freshStatusDescriptions: Record<FreshStatus, string> = {
@@ -88,10 +94,10 @@ const freshStatusDescriptions: Record<FreshStatus, string> = {
   disponivel: "Disponível",
   indisponivel: "Indisponível",
   offline: "Offline",
-}
+};
 
 export function EscalaGrafico() {
-  const [filtro, setFiltro] = useState("todos")
+  const [filtro, setFiltro] = useState("todos");
 
   // Dados dos agentes com seus horários e status do Fresh
   const agentes = [
@@ -107,47 +113,60 @@ export function EscalaGrafico() {
     gerarHorarioAgente("Ricardo Souza", 20, 2, "ativo", "indisponivel"),
     gerarHorarioAgente("Camila Rocha", 20, 2, "folga", "offline"),
     gerarHorarioAgente("Marcelo Nunes", 20, 2, "ativo", "disponivel"),
-  ]
+  ];
 
   // Filtragem dos agentes com base no filtro selecionado
   const agentesFiltrados =
     filtro === "todos"
       ? agentes
       : agentes.filter((agente) => {
-          if (filtro === "manha") return agente.inicio === 8
-          if (filtro === "tarde") return agente.inicio === 14
-          if (filtro === "noite") return agente.inicio === 20
-          return true
-        })
+          if (filtro === "manha") return agente.inicio === 8;
+          if (filtro === "tarde") return agente.inicio === 14;
+          if (filtro === "noite") return agente.inicio === 20;
+          return true;
+        });
 
   // Cores para os diferentes status
   const getBarColor = (status: string) => {
     switch (status) {
       case "ativo":
-        return "#3b82f6" // blue-500
+        return "#3b82f6"; // blue-500
       case "troca":
-        return "#f97316" // orange-500
+        return "#f97316"; // orange-500
       case "folga":
-        return "#6b7280" // gray-500
+        return "#6b7280"; // gray-500
       default:
-        return "#3b82f6"
+        return "#3b82f6";
     }
-  }
+  };
 
   // Formatador personalizado para o tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const data = payload[0].payload;
       return (
         <div className="bg-background border rounded-md shadow-sm p-3 text-sm">
           <p className="font-medium text-base">{data.nome}</p>
           <p className="mb-1">
-            Horário: {formatHora(data.inicio)} - {data.fim === 2 ? "02:00" : formatHora(data.fim)}
+            Horário: {formatHora(data.inicio)} -{" "}
+            {data.fim === 2 ? "02:00" : formatHora(data.fim)}
           </p>
           <div className="flex items-center gap-1 mb-1">
             <span>Status de escala: </span>
-            <Badge variant={data.status === "ativo" ? "default" : data.status === "troca" ? "outline" : "secondary"}>
-              {data.status === "ativo" ? "Ativo" : data.status === "troca" ? "Troca" : "Folga"}
+            <Badge
+              variant={
+                data.status === "ativo"
+                  ? "default"
+                  : data.status === "troca"
+                  ? "outline"
+                  : "secondary"
+              }
+            >
+              {data.status === "ativo"
+                ? "Ativo"
+                : data.status === "troca"
+                ? "Troca"
+                : "Folga"}
             </Badge>
           </div>
           <div className="flex items-center gap-1">
@@ -157,49 +176,59 @@ export function EscalaGrafico() {
               className="flex items-center gap-1"
               style={{
                 backgroundColor: freshStatusColors[data.freshStatus],
-                color: ["disponivel", "yoga", "agua"].includes(data.freshStatus) ? "#000" : "#fff",
+                color: ["disponivel", "yoga", "agua"].includes(data.freshStatus)
+                  ? "#000"
+                  : "#fff",
               }}
             >
-              {freshStatusIcons[data.freshStatus]} {freshStatusDescriptions[data.freshStatus]}
+              {freshStatusIcons[data.freshStatus]}{" "}
+              {freshStatusDescriptions[data.freshStatus]}
             </Badge>
           </div>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   // Hora atual para a linha de referência
-  const horaAtual = new Date().getHours()
+  const horaAtual = new Date().getHours();
 
   // Gerar itens de legenda para os status do Fresh
-  const freshStatusLegendItems = Object.entries(freshStatusDescriptions).map(([key, description]) => {
-    const status = key as FreshStatus
-    return (
-      <div key={key} className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: freshStatusColors[status] }}></div>
-        <span className="text-xs">
-          {freshStatusIcons[status]} {description}
-        </span>
-      </div>
-    )
-  })
+  // const freshStatusLegendItems = Object.entries(freshStatusDescriptions).map(
+  //   ([key, description]) => {
+  //     const status = key as FreshStatus;
+  //     return (
+  //       <div key={key} className="flex items-center gap-2">
+  //         <div
+  //           className="w-3 h-3 rounded-full"
+  //           style={{ backgroundColor: freshStatusColors[status] }}
+  //         ></div>
+  //         <span className="text-xs">
+  //           {freshStatusIcons[status]} {description}
+  //         </span>
+  //       </div>
+  //     );
+  //   }
+  // );
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 text-xs">{freshStatusLegendItems}</div>
-        <Select value={filtro} onValueChange={setFiltro}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por turno" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os turnos</SelectItem>
-            <SelectItem value="manha">Manhã</SelectItem>
-            <SelectItem value="tarde">Tarde</SelectItem>
-            <SelectItem value="noite">Noite</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 text-xs">
+          {/* {freshStatusLegendItems} */}
+          <Select value={filtro} onValueChange={setFiltro}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por turno" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os turnos</SelectItem>
+              <SelectItem value="manha">Manhã</SelectItem>
+              <SelectItem value="tarde">Tarde</SelectItem>
+              <SelectItem value="noite">Noite</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="h-[500px] w-full">
@@ -222,7 +251,12 @@ export function EscalaGrafico() {
               ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]}
               tickFormatter={formatHora}
             />
-            <YAxis dataKey="nome" type="category" width={100} tick={{ fontSize: 12 }} />
+            <YAxis
+              dataKey="nome"
+              type="category"
+              width={100}
+              tick={{ fontSize: 12 }}
+            />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <ReferenceLine
@@ -231,13 +265,24 @@ export function EscalaGrafico() {
               strokeWidth={2}
               label={{ value: "Agora", position: "top", fill: "#ef4444" }}
             />
-            <Bar dataKey="duracao" name="Horário de Trabalho" barSize={20} radius={[4, 4, 4, 4]}>
+            <Bar
+              dataKey="duracao"
+              name="Horário de Trabalho"
+              barSize={20}
+              radius={[4, 4, 4, 4]}
+            >
               {agentesFiltrados.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={freshStatusColors[entry.freshStatus]}
                   // Adiciona uma borda para destacar o status da escala
-                  stroke={entry.status === "troca" ? "#f97316" : entry.status === "folga" ? "#6b7280" : "none"}
+                  stroke={
+                    entry.status === "troca"
+                      ? "#f97316"
+                      : entry.status === "folga"
+                      ? "#6b7280"
+                      : "none"
+                  }
                   strokeWidth={entry.status !== "ativo" ? 2 : 0}
                 />
               ))}
@@ -246,5 +291,5 @@ export function EscalaGrafico() {
         </ResponsiveContainer>
       </div>
     </div>
-  )
+  );
 }
