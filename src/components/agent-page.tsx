@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Plus, Search, RefreshCw, Database, Loader2, Info } from "lucide-react"
+import { Plus, Search, RefreshCw, Database, Loader2, Info, Clock, Calendar, Users, Coffee, Moon } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 
@@ -211,7 +211,7 @@ const AgentesPage: React.FC = () => {
       </div>
 
       <Dialog open={showAddAgentDialog} onOpenChange={setShowAddAgentDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] md:max-w-[700px] lg:max-w-[800px] w-full">
           <DialogHeader>
             <DialogTitle>Adicionar Novo Agente</DialogTitle>
           </DialogHeader>
@@ -346,7 +346,7 @@ const AgentesPage: React.FC = () => {
       </Dialog>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto w-full">
           <DialogHeader>
             <DialogTitle>Editar Agente</DialogTitle>
           </DialogHeader>
@@ -508,53 +508,238 @@ const AgentesPage: React.FC = () => {
       </Dialog>
 
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto w-full">
           <DialogHeader>
             <DialogTitle>Detalhes do Agente</DialogTitle>
           </DialogHeader>
           {selectedAgent && (
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/20 p-3 sm:p-4 rounded-lg">
+                <Avatar className="h-16 w-16 border-2 border-primary/20">
                   <AvatarImage src={selectedAgent.avatar || "/placeholder.svg"} alt={selectedAgent.nome} />
                   <AvatarFallback>{selectedAgent.nome.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <h3 className="text-xl font-semibold">{selectedAgent.nome}</h3>
-                  <p className="text-muted-foreground">{selectedAgent.email}</p>
-                  <p className="text-sm text-muted-foreground">ID: {selectedAgent.freshchat_id}</p>
+                <div className="space-y-1 w-full">
+                  <h3 className="text-xl font-semibold text-primary">{selectedAgent.nome}</h3>
+                  <p className="text-muted-foreground break-all text-sm">{selectedAgent.email}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs font-normal">
+                      ID: {selectedAgent.freshchat_id}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Escala de Trabalho</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(selectedAgent.dias_trabalho || []).map((dia) => {
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <h4 className="text-lg font-semibold">Escala de Trabalho</h4>
+                </div>
+                
+                {/* Resumo da escala */}
+                <div className="bg-muted/30 rounded-lg p-3 sm:p-4 border border-muted">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                    <div className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full">
+                      <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="font-medium">{(selectedAgent.dias_trabalho || []).length} dias de trabalho</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-green-500/10 px-3 py-1.5 rounded-full">
+                      <Users className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span className="text-green-600 font-medium">Ativo</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grade de horários */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2 sm:gap-3 md:gap-3 lg:gap-4 xl:gap-4 w-full">
+                  {diasDaSemana.map((dia) => {
                     const horario = selectedAgent.horarios[dia]
+                    const isWorkDay = (selectedAgent.dias_trabalho || []).includes(dia)
+                    
+                    // Verificar se há horários cadastrados para este dia
+                    const hasSchedule = isWorkDay && horario && (
+                      (horario.horario_inicio || horario.inicio) || 
+                      (horario.horario_fim || horario.fim)
+                    )
+                    
+                    // Verificar se há intervalo cadastrado
+                    const hasInterval = hasSchedule && horario && 
+                      horario.intervalo_inicio && horario.intervalo_fim
+                    
+                    // Formatar horários para exibição
+                    const formatTime = (time) => {
+                      if (!time) return '--:--'
+                      
+                      // Se for um timestamp numérico (ex: 1752994800000)
+                      if (typeof time === 'number' || /^\d+$/.test(time)) {
+                        try {
+                          const date = new Date(Number(time))
+                          return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+                        } catch (e) {
+                          console.error('Erro ao converter timestamp:', e)
+                        }
+                      }
+                      
+                      // Garantir formato HH:MM se já for string
+                      if (typeof time === 'string') {
+                        if (time.length === 5 && time.includes(':')) return time
+                        // Tentar converter outros formatos de string
+                        try {
+                          const [hours, minutes] = time.split(':').map(Number)
+                          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+                        } catch (e) {
+                          // Ignorar erro e continuar
+                        }
+                      }
+                      
+                      // Fallback para casos não tratados
+                      return '--:--'
+                    }
+                    
+                    // Calcular duração do expediente
+                    const calculateDuration = () => {
+                      const inicio = horario?.horario_inicio || horario?.inicio
+                      const fim = horario?.horario_fim || horario?.fim
+                      if (inicio && fim) {
+                        try {
+                          // Converter para minutos do dia, independente do formato
+                          const getMinutesFromTime = (time) => {
+                            // Se for timestamp numérico
+                            if (typeof time === 'number' || /^\d+$/.test(time)) {
+                              const date = new Date(Number(time))
+                              return date.getHours() * 60 + date.getMinutes()
+                            }
+                            // Se for string no formato HH:MM
+                            if (typeof time === 'string' && time.includes(':')) {
+                              const [hours, minutes] = time.split(':').map(Number)
+                              return hours * 60 + minutes
+                            }
+                            return 0
+                          }
+                          
+                          const minutosInicio = getMinutesFromTime(inicio)
+                          const minutosFim = getMinutesFromTime(fim)
+                          const totalMinutos = minutosFim - minutosInicio
+                          
+                          if (totalMinutos <= 0) return '--' // Caso de horário inválido
+                          const horas = Math.floor(totalMinutos / 60)
+                          const minutos = totalMinutos % 60
+                          return `${horas}h${minutos > 0 ? ` ${minutos}m` : ''}`
+                        } catch (e) {
+                          console.error('Erro ao calcular duração:', e)
+                          return '--'
+                        }
+                      }
+                      return '--'
+                    }
+                    
                     return (
-                      <div key={dia} className="border rounded-lg p-4 space-y-3">
-                        <div className="text-lg font-medium text-primary">{dia}</div>
-                        {horario ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-muted-foreground">Horário de Trabalho:</span>
-                              <span className="font-medium">
-                                {horario.horario_inicio || horario.inicio || '--:--'} - {horario.horario_fim || horario.fim || '--:--'}
-                              </span>
+                      <div 
+                        key={dia} 
+                        className={`relative border-2 rounded-xl p-3 sm:p-4 transition-all duration-200 w-full min-w-[200px] ${
+                          hasSchedule 
+                            ? 'border-primary/20 bg-primary/5 hover:border-primary/40 hover:shadow-md' 
+                            : 'border-muted bg-muted/30'
+                        }`}
+                      >
+                        {/* Indicador de status */}
+                        <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
+                          hasSchedule ? 'bg-green-500' : 'bg-gray-300'
+                        }`} />
+                        
+                        {/* Dia da semana */}
+                        <div className={`text-base sm:text-lg font-semibold mb-2 sm:mb-3 ${
+                          hasSchedule ? 'text-primary' : 'text-muted-foreground'
+                        }`}>
+                          {dia}
+                        </div>
+                        
+                        {hasSchedule ? (
+                          <div className="space-y-3">
+                            {/* Escala de trabalho no formato solicitado */}
+                            <div className="space-y-3">
+                              <div className="bg-white/80 rounded-lg p-3 sm:p-4 border w-full overflow-hidden min-w-[180px]">
+                                <div className="space-y-2 sm:space-y-3 w-full">
+                                  {/* Início da escala */}
+                              <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-3 w-full">
+                                <div className="flex items-center gap-1.5 text-sm sm:text-base text-muted-foreground min-w-[80px] sm:min-w-[90px] md:min-w-[100px] lg:min-w-[110px] flex-shrink-0">
+                                  <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span className="truncate">Início:</span>
+                                </div>
+                                <div className="font-medium text-primary whitespace-nowrap text-sm sm:text-base flex-shrink-0">
+                                  {formatTime(horario.horario_inicio || horario.inicio)}
+                                </div>
+                              </div>
+                              
+                              {/* Intervalo - só exibe se tiver dados */}
+                              {hasInterval && (
+                                <div className="flex items-center justify-between gap-2 sm:gap-3 py-2 sm:py-3 border-y border-muted/50 w-full">
+                                  <div className="flex items-center gap-1.5 text-sm sm:text-base text-muted-foreground min-w-[80px] sm:min-w-[90px] md:min-w-[100px] lg:min-w-[110px] flex-shrink-0">
+                                    <Coffee className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                                    <span className="truncate">Intervalo:</span>
+                                  </div>
+                                  <div className="font-medium text-orange-700 text-right overflow-hidden text-sm sm:text-base flex-shrink-0">
+                                    <span className="whitespace-nowrap inline-block max-w-[90px] sm:max-w-[120px] md:max-w-[150px] lg:max-w-[180px] xl:max-w-full truncate">
+                                      {formatTime(horario.intervalo_inicio)} a {formatTime(horario.intervalo_fim)}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Término da escala */}
+                              <div className="flex items-center justify-between gap-2 sm:gap-3 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-muted/50 w-full">
+                                <div className="flex items-center gap-1.5 text-sm sm:text-base text-muted-foreground min-w-[80px] sm:min-w-[90px] md:min-w-[100px] lg:min-w-[110px] flex-shrink-0">
+                                  <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span className="truncate">Término:</span>
+                                </div>
+                                <div className="font-medium text-primary whitespace-nowrap text-sm sm:text-base flex-shrink-0">
+                                  {formatTime(horario.horario_fim || horario.fim)}
+                                </div>
+                              </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Intervalo:</span>
-                              <span>
-                                {horario.intervalo_inicio || '--:--'} - {horario.intervalo_fim || '--:--'}
-                              </span>
+                            
+                            {/* Duração total */}
+                            <div className="pt-2 sm:pt-3 border-t border-muted">
+                              <div className="flex items-center justify-between text-xs sm:text-sm">
+                                <span className="text-muted-foreground">Duração total:</span>
+                                <span className="font-semibold text-primary">
+                                  {calculateDuration()}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         ) : (
-                          <div className="text-muted-foreground">Horários não definidos</div>
+                          <div className="flex flex-col items-center justify-center py-4 sm:py-6 text-center bg-muted/20 rounded-lg border border-muted">
+                            <Moon className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground/60 mb-2 sm:mb-3" />
+                            <div className="text-sm sm:text-base text-muted-foreground font-medium">Dia de folga</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground/70 mt-1 sm:mt-2">Sem expediente</div>
+                          </div>
                         )}
                       </div>
                     )
                   })}
+                </div>
+                
+                {/* Legenda */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground bg-muted/30 rounded-lg p-3 sm:p-4 border border-muted">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-green-500 flex-shrink-0" />
+                    <span className="truncate">Dia de trabalho</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gray-300 flex-shrink-0" />
+                    <span className="truncate">Dia de folga</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">Horário</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Coffee className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">Intervalo</span>
+                  </div>
                 </div>
               </div>
             </div>
