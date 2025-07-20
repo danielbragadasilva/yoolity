@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const canSeeAgentDashboard = role !== null; // todos os roles têm acesso ao dashboard do agente
   const canSeeMarketplace = role !== null;
 
-  const defaultTab = canSeeSupervisorDashboard ? "supervisor" : "agent";
+  const defaultTab = canSeeSupervisorDashboard ? "dash-supervisor" : "dash-agent";
 
   if (!role) {
     return <p className="p-4 text-muted-foreground">Carregando...</p>;

@@ -70,11 +70,29 @@ function FreshChatTab() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusType>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [availability, setAvailability] = useState<"all" | "online" | "offline">("all");
 
   const allowedRoles = [
     "855dd18d-0b29-4f2a-a6ad-931027963b9d",
     "72bf957d-f2b7-41db-aa6f-8146351e4685",
+  ];
+
+  // Lista de IDs permitidos
+  const allowedIds = [
+    "8adf9899-3924-4340-8538-3a7fd1e99127",
+    "28981349-9b86-4444-8016-adeaea56c0af",
+    "61270de4-eab0-4030-bd58-c344317fb99a",
+    "3675a143-cc9c-4382-9e16-ca05d396aba9",
+    "c344c55f-6cb5-4f9c-b0c4-f22e5a50aab0",
+    "092f21ae-1afb-43aa-99b1-b5c6af5a64df",
+    "1b606bd9-9ac5-475f-b553-91553aa369d7",
+    "65621928-bbba-41ee-8350-6780138e6f7e",
+    "26bf4689-4e97-4a52-a6c7-43b6545378e8",
+    "1a4d93db-f11c-4b5a-8d2b-8556f734ebbc",
+    "43b5a51f-9727-4932-8570-d13ea59442d9",
+    "487010b9-0082-4738-9647-7f26dffa3086",
+    "9f9a5eff-8d86-41c9-962a-1942ffbc5315",
+    "5a8d3c94-6d4c-4564-818b-a1e90816188c",
+    "83110aee-7535-43e9-98e3-1bfb9d4cc09a"
   ];
 
   const fetchAgents = async () => {
@@ -93,7 +111,7 @@ function FreshChatTab() {
   }, []);
 
   const filteredAgents = agents.filter((agent) => {
-    if (!allowedRoles.includes(agent.role_id || "")) return false;
+    if (!allowedRoles.includes(agent.role_id || "") || !allowedIds.includes(agent.id)) return false;
 
     if (
       statusFilter !== "all" &&
@@ -111,12 +129,7 @@ function FreshChatTab() {
       if (agent.agent_status?.id !== statusMap[statusFilter]) return false;
     }
 
-    if (
-      availability !== "all" &&
-      agent.login_status !== (availability === "online")
-    ) {
-      return false;
-    }
+
 
     if (
       searchQuery &&
@@ -167,16 +180,7 @@ function FreshChatTab() {
           </SelectContent>
         </Select>
 
-        <Select value={availability} onValueChange={(value) => setAvailability(value as "all" | "online" | "offline")}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filtrar por disponibilidade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="online">Online</SelectItem>
-            <SelectItem value="offline">Offline</SelectItem>
-          </SelectContent>
-        </Select>
+
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

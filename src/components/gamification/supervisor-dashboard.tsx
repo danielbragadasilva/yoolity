@@ -26,7 +26,7 @@ type Task = {
   description: string
   points: number
   difficulty: "easy" | "medium" | "hard"
-  status: "ativo" | "inativo"
+  status: "ativo" // Apenas status ativo
 }
 
 export function SupervisorDashboard() {
@@ -203,21 +203,12 @@ export function SupervisorDashboard() {
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Status
-                </Label>
-                <Select
-                  value={newTask.status}
-                  onValueChange={(value: "ativo" | "inativo") => setNewTask({ ...newTask, status: value })}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="status"
+                  value="ativo"
+                  className="col-span-3 hidden"
+                  readOnly
+                />
               </div>
             </div>
             <DialogFooter>
@@ -258,8 +249,8 @@ export function SupervisorDashboard() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={task.status === "ativo" ? "default" : "secondary"}>
-                      {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                    <Badge variant="default">
+                      Ativo
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

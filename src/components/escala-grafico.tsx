@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useFreshchatAgents } from "@/hooks/useFreshchatAgents";
 
 // Função para formatar horas (0-24) para exibição no gráfico
 const formatHora = (hora: number) => {
@@ -38,6 +39,19 @@ type FreshStatus =
   | "disponivel"
   | "indisponivel"
   | "offline";
+
+// Mapeamento de IDs de status do Freshchat para FreshStatus
+const freshchatStatusMap: Record<string, FreshStatus> = {
+  "633ef7ea-a1ce-4b27-8392-59d889bc364c": "feedback",
+  "bc87d9ab-5182-4262-869d-3c15becafed7": "reuniao",
+  "89a84427-67ba-49ef-a29c-9bd3438bf314": "yoga",
+  "08c972df-8a8b-478f-9312-19ba67d7dc79": "pausa",
+  "78de2fb5-cdeb-4876-8bfd-93bf6f4690b3": "agua",
+  "0e6d80bf-aa09-40e7-bc6d-0e8b2f189298": "demandas",
+  "Active on Intelli Assign": "disponivel",
+  "Inactive on Intelli Assign": "indisponivel",
+  "AVAILABLE": "disponivel",
+};
 
 // Função para gerar dados de horário para um agente
 const gerarHorarioAgente = (
@@ -99,21 +113,66 @@ const freshStatusDescriptions: Record<FreshStatus, string> = {
 export function EscalaGrafico() {
   const [filtro, setFiltro] = useState("todos");
 
-  // Dados dos agentes com seus horários e status do Fresh
-  const agentes = [
-    gerarHorarioAgente("Carlos Silva", 8, 14, "ativo", "disponivel"),
-    gerarHorarioAgente("Maria Oliveira", 8, 14, "ativo", "feedback"),
-    gerarHorarioAgente("João Pereira", 8, 14, "ativo", "reuniao"),
-    gerarHorarioAgente("Ana Santos", 8, 14, "ativo", "agua"),
-    gerarHorarioAgente("Luiza Costa", 14, 20, "ativo", "disponivel"),
-    gerarHorarioAgente("Pedro Alves", 14, 20, "ativo", "yoga"),
-    gerarHorarioAgente("Juliana Lima", 14, 20, "ativo", "demandas"),
-    gerarHorarioAgente("Roberto Dias", 14, 20, "troca", "pausa"),
-    gerarHorarioAgente("Fernanda Gomes", 20, 2, "ativo", "disponivel"),
-    gerarHorarioAgente("Ricardo Souza", 20, 2, "ativo", "indisponivel"),
-    gerarHorarioAgente("Camila Rocha", 20, 2, "folga", "offline"),
-    gerarHorarioAgente("Marcelo Nunes", 20, 2, "ativo", "disponivel"),
-  ];
+    // Obter dados reais dos agentes do Freshchat
+  const { agents, loading } = useFreshchatAgents();
+  
+  // Função para determinar o status do Fresh com base nos dados do Freshchat
+  const getFreshStatus = (agent: any): FreshStatus => {
+    // Verificar availability_status
+    if (agent.availability_status === "AVAILABLE") {
+      return "disponivel";
+    }
+    
+    // Verificar agent_status.id ou agent_status.name
+    if (agent.agent_status?.id) {
+      return freshchatStatusMap[agent.agent_status.id] || "offline";
+    }
+    
+    if (agent.agent_status?.name) {
+      return freshchatStatusMap[agent.agent_status.name] || "offline";
+    }
+    
+    // Se não tiver status ou não estiver logado
+    if (!agent.login_status) {
+      return "offline";
+    }
+    
+    return "indisponivel";
+  };
+  
+  // Função para determinar o turno com base na hora atual (simplificada)
+  const determinarTurno = (agent: any): { inicio: number; fim: number } => {
+    // Aqui você pode implementar a lógica real para determinar o turno
+    // Por enquanto, vamos usar uma lógica simplificada baseada no nome do agente
+    const hora = new Date().getHours();
+    
+    // Manhã: 8h às 14h
+    if (hora >= 6 && hora < 12) {
+      return { inicio: 8, fim: 14 };
+    }
+    // Tarde: 14h às 20h
+    else if (hora >= 12 && hora < 18) {
+      return { inicio: 14, fim: 20 };
+    }
+    // Noite: 20h às 2h
+    else {
+      return { inicio: 20, fim: 2 };
+    }
+  };
+  
+  // Converter agentes do Freshchat para o formato do gráfico
+  const agentes = agents.map((agent) => {
+    const turno = determinarTurno(agent);
+    const freshStatus = getFreshStatus(agent);
+    
+    return gerarHorarioAgente(
+      `${agent.first_name} ${agent.last_name || ""}`,
+      turno.inicio,
+      turno.fim,
+      "ativo", // Por padrão, todos são ativos
+      freshStatus
+    );
+  });
 
   // Filtragem dos agentes com base no filtro selecionado
   const agentesFiltrados =
@@ -216,7 +275,24 @@ export function EscalaGrafico() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 text-xs">
-          {/* {freshStatusLegendItems} */}
+          {/* Legenda de status */}
+          {/* <div className="col-span-2 md:col-span-4 lg:col-span-6 grid grid-cols-3 md:grid-cols-6 gap-2">
+            {Object.entries(freshStatusDescriptions).map(([key, description]) => {
+              const status = key as FreshStatus;
+              return (
+                <div key={key} className="flex items-center gap-1">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: freshStatusColors[status] }}
+                  ></div>
+                  <span className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                    {freshStatusIcons[status]} {description}
+                  </span>
+                </div>
+              );
+            })}
+          </div> */}
+          
           <Select value={filtro} onValueChange={setFiltro}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por turno" />
@@ -231,18 +307,27 @@ export function EscalaGrafico() {
         </div>
       </div>
 
-      <div className="h-[500px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            layout="vertical"
-            data={agentesFiltrados}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 100,
-              bottom: 5,
-            }}
-          >
+      {loading ? (
+        <div className="h-[500px] w-full flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando dados dos agentes...</p>
+        </div>
+      ) : agentes.length === 0 ? (
+        <div className="h-[500px] w-full flex items-center justify-center">
+          <p className="text-muted-foreground">Nenhum agente encontrado</p>
+        </div>
+      ) : (
+        <div className="h-[500px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              layout="vertical"
+              data={agentesFiltrados}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 100,
+                bottom: 5,
+              }}
+            >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
             <XAxis
               type="number"
@@ -290,6 +375,7 @@ export function EscalaGrafico() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+      )}
     </div>
   );
 }
