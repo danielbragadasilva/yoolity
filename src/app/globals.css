@@ -66,6 +66,7 @@ body {
   --primary-foreground: #0a639a;
   --secondary: #0a639a;
   --secondary-foreground: oklch(0.205 0 0);
+  --secondary-light: #f18bb0;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);

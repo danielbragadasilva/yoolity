@@ -30,13 +30,20 @@ export async function POST(request: Request) {
       freshchat_id: agent.freshchat_id,
       horarios: Object.entries(agent.horarios)
         .filter(([dia, horario]: [string, any]) => agent.dias_trabalho.includes(dia))
-        .map(([dia, horario]: [string, any]) => ({
-          dia,
-          horario_inicio: horario.inicio,
-          horario_fim: horario.fim,
-          intervalo_inicio: horario.intervalo_inicio,
-          intervalo_fim: horario.intervalo_fim
-        }))
+        .map(([dia, horario]: [string, any]) => {
+          const horarioObj = {
+            dia,
+            horario_inicio: horario.horario_inicio || horario.inicio,
+            horario_fim: horario.horario_fim || horario.fim,
+            intervalo_inicio: horario.intervalo_inicio,
+            intervalo_fim: horario.intervalo_fim
+          };
+          
+          // Log para debug
+          console.log(`Horário para ${dia}:`, JSON.stringify(horarioObj, null, 2));
+          
+          return horarioObj;
+        })
     };
 
     // Cadastrar agente na Xano
@@ -137,17 +144,57 @@ export async function POST(request: Request) {
   }
 }
 
+// Função para aguardar um tempo específico
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Função para fazer requisição com retry em caso de limite de taxa
+async function fetchWithRetry(url: string, options: RequestInit, retryCount = 3, retryDelay = 2000) {
+  let lastError;
+  
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      // Se não for a primeira tentativa, aguarda antes de tentar novamente
+      if (attempt > 0) {
+        console.log(`Tentativa ${attempt + 1} para ${url}. Aguardando ${retryDelay}ms...`);
+        await sleep(retryDelay);
+        // Aumenta o tempo de espera a cada tentativa
+        retryDelay = retryDelay * 1.5;
+      }
+      
+      const response = await fetch(url, options);
+      
+      // Se for erro de limite de taxa, tenta novamente
+      if (response.status === 429) {
+        const errorText = await response.text();
+        console.error(`Limite de taxa atingido na tentativa ${attempt + 1}:`, errorText);
+        lastError = new Error(`429 - ${errorText}`);
+        continue; // Tenta novamente
+      }
+      
+      return response; // Retorna a resposta se não for erro de limite de taxa
+    } catch (error) {
+      console.error(`Erro na tentativa ${attempt + 1}:`, error);
+      lastError = error;
+    }
+  }
+  
+  // Se chegou aqui, todas as tentativas falharam
+  throw lastError || new Error('Falha após múltiplas tentativas');
+}
+
 export async function GET() {
   try {
-    // Buscar agentes
-    const agentsResponse = await fetch(`${xanoEndpoint}/agents`, {
+    console.log('Buscando agentes da API do Xano...');
+    // Buscar agentes com retry
+    const agentsResponse = await fetchWithRetry(`${xanoEndpoint}/agents`, {
       headers: {
         'Authorization': `Bearer ${xanoApiKey}`
       }
     });
 
     if (!agentsResponse.ok) {
-      throw new Error('Erro ao buscar agentes da Xano');
+      const errorText = await agentsResponse.text();
+      throw new Error(`Erro ao buscar agentes da Xano: ${agentsResponse.status} - ${errorText}`);
     }
 
     const agentsData = await agentsResponse.json();
@@ -158,15 +205,21 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    // Buscar horários
-    const schedulesResponse = await fetch(`${xanoEndpoint}/agent_schedules`, {
+    // Aguarda 2 segundos antes de buscar os horários para evitar limite de taxa
+    console.log('Aguardando 2 segundos antes de buscar horários...');
+    await sleep(2000);
+    
+    console.log('Buscando horários da API do Xano...');
+    // Buscar horários com retry
+    const schedulesResponse = await fetchWithRetry(`${xanoEndpoint}/agent_schedules`, {
       headers: {
         'Authorization': `Bearer ${xanoApiKey}`
       }
     });
 
     if (!schedulesResponse.ok) {
-      throw new Error('Erro ao buscar horários da Xano');
+      const errorText = await schedulesResponse.text();
+      throw new Error(`Erro ao buscar horários da Xano: ${schedulesResponse.status} - ${errorText}`);
     }
 
     const schedulesData = await schedulesResponse.json();
@@ -190,17 +243,31 @@ export async function GET() {
       };
 
       // Processar horários
-      agentSchedules.forEach((schedule: WorkSchedule) => {
+      agentSchedules.forEach((schedule: any) => {
         if (schedule && schedule.dia) {
-          formattedAgent.horarios[schedule.dia] = {
-            inicio: schedule.horario_inicio || '',
-            fim: schedule.horario_fim || '',
-            intervalo_inicio: schedule.intervalo_inicio || '',
-            intervalo_fim: schedule.intervalo_fim || ''
+          // Converter timestamps para strings de horário no formato HH:MM
+          const formatTimeFromTimestamp = (timestamp: number): string => {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
           };
-          formattedAgent.dias_trabalho.push(schedule.dia);
+
+          formattedAgent.horarios[schedule.dia] = {
+            horario_inicio: formatTimeFromTimestamp(schedule.horario_inicio) || '',
+            horario_fim: formatTimeFromTimestamp(schedule.horario_fim) || '',
+            intervalo_inicio: formatTimeFromTimestamp(schedule.intervalo_inicio) || '',
+            intervalo_fim: formatTimeFromTimestamp(schedule.intervalo_fim) || ''
+          };
+          
+          // Adicionar o dia à lista de dias de trabalho se ainda não estiver lá
+          if (!formattedAgent.dias_trabalho.includes(schedule.dia)) {
+            formattedAgent.dias_trabalho.push(schedule.dia);
+          }
         }
       });
+      
+      // Log para debug
+      console.log('Horários formatados para o agente:', formattedAgent.id, JSON.stringify(formattedAgent.horarios, null, 2));
 
       return formattedAgent;
     });
