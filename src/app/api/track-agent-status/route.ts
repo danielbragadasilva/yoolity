@@ -1,11 +1,28 @@
 // app/api/track-agent-status/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+
+interface AgentStatus {
+  id: string;
+  name: string;
+}
+
+interface Agent {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  agent_status?: AgentStatus;
+  login_status: boolean;
+}
+
+interface RequestBody {
+  agents: Agent[];
+}
 
 export async function POST(request: Request) {
-  const supabase = createClient(cookies());
-  const body = await request.json();
+  const supabase = createClient();
+  const body: RequestBody = await request.json();
 
   // Lista de IDs permitidos
   const allowedIds = [
@@ -27,10 +44,10 @@ export async function POST(request: Request) {
   ];
 
   // Filtrar agentes pelos IDs permitidos
-  const filteredAgents = body.agents.filter((agent: any) => allowedIds.includes(agent.id));
+  const filteredAgents = body.agents.filter((agent: Agent) => allowedIds.includes(agent.id));
 
   const { error } = await supabase.from("agent_status_history").insert(
-    filteredAgents.map((agent: any) => ({
+    filteredAgents.map((agent: Agent) => ({
       agent_id: agent.id,
       agent_name: `${agent.first_name} ${agent.last_name}`,
       agent_email: agent.email,

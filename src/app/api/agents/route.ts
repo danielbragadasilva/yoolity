@@ -3,12 +3,47 @@ import { NextResponse } from 'next/server';
 const xanoApiKey = process.env.XANO_API_KEY!;
 const xanoEndpoint = process.env.XANO_ENDPOINT!;
 
-interface WorkSchedule {
+interface HorarioData {
+  horario_inicio?: string;
+  horario_fim?: string;
+  inicio?: string;
+  fim?: string;
+  intervalo_inicio?: string;
+  intervalo_fim?: string;
+}
+
+interface XanoAgent {
+  id: number;
+  nome: string;
+  email: string;
+  freshchat_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface XanoSchedule {
+  agents_id: number;
   dia: string;
-  horario_inicio: string;
-  horario_fim: string;
-  intervalo_inicio: string;
-  intervalo_fim: string;
+  horario_inicio: number;
+  horario_fim: number;
+  intervalo_inicio: number;
+  intervalo_fim: number;
+}
+
+interface FormattedAgent {
+  id: string;
+  nome: string;
+  email: string;
+  freshchat_id: string;
+  horarios: Record<string, {
+    horario_inicio?: string;
+    horario_fim?: string;
+    intervalo_inicio?: string;
+    intervalo_fim?: string;
+  }>;
+  dias_trabalho: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export async function POST(request: Request) {
@@ -28,9 +63,9 @@ export async function POST(request: Request) {
       nome: agent.nome,
       email: agent.email,
       freshchat_id: agent.freshchat_id,
-      horarios: Object.entries(agent.horarios)
-        .filter(([dia, horario]: [string, any]) => agent.dias_trabalho.includes(dia))
-        .map(([dia, horario]: [string, any]) => {
+      horarios: (Object.entries(agent.horarios) as [string, HorarioData][])
+        .filter(([dia]) => agent.dias_trabalho.includes(dia))
+        .map(([dia, horario]) => {
           const horarioObj = {
             dia,
             horario_inicio: horario.horario_inicio || horario.inicio,
@@ -226,13 +261,13 @@ export async function GET() {
     console.log('Dados brutos dos horários:', schedulesData);
 
     // Transformar os dados para o formato esperado pelo frontend
-    const formattedAgents = agentsData.map((agent: any) => {
+    const formattedAgents = agentsData.map((agent: XanoAgent) => {
       const agentSchedules = Array.isArray(schedulesData) 
-        ? schedulesData.filter((schedule: any) => schedule.agents_id === agent.id)
+        ? schedulesData.filter((schedule: XanoSchedule) => schedule.agents_id === agent.id)
         : [];
 
-      const formattedAgent = {
-        id: agent.id || '',
+      const formattedAgent: FormattedAgent = {
+        id: String(agent.id) || '',
         nome: agent.nome || '',
         email: agent.email || '',
         freshchat_id: agent.freshchat_id || '',
@@ -243,7 +278,7 @@ export async function GET() {
       };
 
       // Processar horários
-      agentSchedules.forEach((schedule: any) => {
+      agentSchedules.forEach((schedule: XanoSchedule) => {
         if (schedule && schedule.dia) {
           // Converter timestamps para strings de horário no formato HH:MM
           const formatTimeFromTimestamp = (timestamp: number): string => {
@@ -252,7 +287,12 @@ export async function GET() {
             return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
           };
 
-          formattedAgent.horarios[schedule.dia] = {
+          (formattedAgent.horarios as Record<string, {
+            horario_inicio?: string;
+            horario_fim?: string;
+            intervalo_inicio?: string;
+            intervalo_fim?: string;
+          }>)[schedule.dia] = {
             horario_inicio: formatTimeFromTimestamp(schedule.horario_inicio) || '',
             horario_fim: formatTimeFromTimestamp(schedule.horario_fim) || '',
             intervalo_inicio: formatTimeFromTimestamp(schedule.intervalo_inicio) || '',

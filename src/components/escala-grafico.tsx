@@ -116,8 +116,18 @@ export function EscalaGrafico() {
     // Obter dados reais dos agentes do Freshchat
   const { agents, loading } = useFreshchatAgents();
   
+  // Interface para o agente do Freshchat
+  interface FreshchatAgent {
+    availability_status?: string;
+    agent_status?: {
+      id?: string;
+      name?: string;
+    };
+    login_status?: boolean;
+  }
+
   // Função para determinar o status do Fresh com base nos dados do Freshchat
-  const getFreshStatus = (agent: any): FreshStatus => {
+  const getFreshStatus = (agent: FreshchatAgent): FreshStatus => {
     // Verificar availability_status
     if (agent.availability_status === "AVAILABLE") {
       return "disponivel";
@@ -141,7 +151,7 @@ export function EscalaGrafico() {
   };
   
   // Função para determinar o turno com base na hora atual (simplificada)
-  const determinarTurno = (agent: any): { inicio: number; fim: number } => {
+  const determinarTurno = (): { inicio: number; fim: number } => {
     // Aqui você pode implementar a lógica real para determinar o turno
     // Por enquanto, vamos usar uma lógica simplificada baseada no nome do agente
     const hora = new Date().getHours();
@@ -185,22 +195,19 @@ export function EscalaGrafico() {
           return true;
         });
 
-  // Cores para os diferentes status
-  const getBarColor = (status: string) => {
-    switch (status) {
-      case "ativo":
-        return "#3b82f6"; // blue-500
-      case "troca":
-        return "#f97316"; // orange-500
-      case "folga":
-        return "#6b7280"; // gray-500
-      default:
-        return "#3b82f6";
-    }
-  };
+  // Interface para o payload do tooltip
+  interface TooltipPayload {
+    payload: {
+      nome: string;
+      inicio: number;
+      fim: number;
+      status: string;
+      freshStatus: string;
+    };
+  }
 
   // Formatador personalizado para o tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

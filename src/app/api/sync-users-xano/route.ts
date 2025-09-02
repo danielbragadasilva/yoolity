@@ -189,10 +189,11 @@ export async function POST() {
       results: syncResults,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erro na sincronização:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor";
     return NextResponse.json(
-      { error: error.message || "Erro interno do servidor" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -257,9 +258,10 @@ export async function GET() {
       })),
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor";
     return NextResponse.json(
-      { error: error.message || "Erro interno do servidor" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

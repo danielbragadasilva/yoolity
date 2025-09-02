@@ -42,7 +42,7 @@ export async function GET() {
         
         // Filtrar apenas os agentes com IDs permitidos
         if (data.agents && Array.isArray(data.agents)) {
-            data.agents = data.agents.filter(agent => allowedIds.includes(agent.id));
+            data.agents = data.agents.filter((agent: { id: string }) => allowedIds.includes(agent.id));
         }
         
         return Response.json(data);

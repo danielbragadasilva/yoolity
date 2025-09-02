@@ -12,24 +12,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,7 +32,6 @@ import {
 import {
   Plus,
   Search,
-  RefreshCw,
   Database,
   Loader2,
   Info,
@@ -49,9 +39,8 @@ import {
   Calendar,
   Users,
   Coffee,
-  Moon,
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { toast } from "sonner";
 
 interface Agent {
@@ -413,7 +402,7 @@ const AgentesPage: React.FC = () => {
                               <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                                 <Input
                                   type="time"
-                                  value={newAgent.horarios[dia].horario_inicio || newAgent.horarios[dia].inicio || ""}
+                                  value={newAgent.horarios[dia]?.horario_inicio || newAgent.horarios[dia]?.inicio || ""}
                                   onChange={(e) => {
                                     const updatedHorarios = {
                                       ...newAgent.horarios,
@@ -882,7 +871,7 @@ const AgentesPage: React.FC = () => {
                               .padStart(2, "0")}:${minutes
                               .toString()
                               .padStart(2, "0")}`;
-                          } catch (e) {
+                          } catch {
                             // Ignorar erro e continuar
                             return "--:--";
                           }
@@ -1164,50 +1153,9 @@ const AgentesPage: React.FC = () => {
                     <div className="flex flex-nowrap overflow-x-auto gap-1 mt-1 pb-1">
                       {(agent.dias_trabalho || []).map((dia) => {
                         const horario = agent.horarios[dia];
-                        const formatTime = (time) => {
-                          if (!time) return "--:--";
-                          
-                          // Se for um timestamp numérico (ex: 1752994800000)
-                          if (typeof time === "number" || /^\d+$/.test(time)) {
-                            try {
-                              // Criar data com timezone de Brasília (UTC-3)
-                              const date = new Date(Number(time));
-                              // Usar toLocaleTimeString com locale pt-BR e timezone America/Sao_Paulo
-                              return date.toLocaleTimeString("pt-BR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                                timeZone: "America/Sao_Paulo"
-                              });
-                            } catch (e) {
-                              console.error("Erro ao converter timestamp:", e);
-                              return "--:--";
-                            }
-                          }
-                          
-                          // Garantir formato HH:MM se já for string
-                          if (typeof time === "string") {
-                            if (time.length === 5 && time.includes(":")) return time;
-                            return "--:--";
-                          }
-                          
-                          return "--:--";
-                        };
+
                         
-                        const horarioContent = horario ? (
-                          <div className="space-y-1">
-                            <div className="text-xs">
-                              <span className="text-muted-foreground font-medium">Trabalhos:</span>{" "}
-                              {formatTime(horario.horario_inicio || horario.inicio)} - {formatTime(horario.horario_fim || horario.fim)}
-                            </div>
-                            <div className="text-xs">
-                              <span className="text-muted-foreground font-medium">Intervalo:</span>{" "}
-                              {formatTime(horario.intervalo_inicio)} - {formatTime(horario.intervalo_fim)}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-xs">Folga</div>
-                        );
+
                         
                         return (
                           <Badge 

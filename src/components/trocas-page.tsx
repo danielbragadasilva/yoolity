@@ -32,7 +32,6 @@ export default function TrocasPage() {
   const [date, setDate] = useState<Date>()
   const [paymentDate, setPaymentDate] = useState<Date>()
   const [tipoUsuario, setTipoUsuario] = useState("agente") // ou "supervisor"
-  const [tipoTroca, setTipoTroca] = useState("com-pagamento") // ou "em-aberto"
   const [showPaymentOptions, setShowPaymentOptions] = useState(true)
 
   const trocas = [

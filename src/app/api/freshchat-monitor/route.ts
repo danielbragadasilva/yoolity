@@ -1,12 +1,26 @@
 // app/api/freshchat-monitor/route.ts
 import { NextResponse } from "next/server";
 
+interface FreshchatAgent {
+  id: string;
+  first_name: string;
+  availability_status: string;
+}
+
+interface StatusChange {
+  agent_id: string;
+  agent_name: string;
+  new_status: string;
+  previous_status: string;
+  timestamp: string;
+}
+
 const API_URL = "https://yoogatecnologia.freshchat.com/v2/agents?items_per_page=100";
 const BEARER_TOKEN = process.env.FRESHCHAT_BEARER_TOKEN!;
 const XANO_WEBHOOK_URL = "https://x8ki-letl-twmt.n7.xano.io/api:vPyGy-ov/log-status"; // Substitua se necessário
 
 // Cache local para comparação de status (dura apenas durante o runtime da instância)
-let lastStatuses: Record<string, string> = {};
+const lastStatuses: Record<string, string> = {};
 
 export async function GET() {
   try {
@@ -21,7 +35,7 @@ export async function GET() {
       throw new Error(`Erro ao buscar agentes: ${response.status}`);
     }
 
-    const { agents } = await response.json();
+    const { agents }: { agents: FreshchatAgent[] } = await response.json();
     
     // Lista de IDs permitidos
     const allowedIds = [
@@ -43,10 +57,10 @@ export async function GET() {
     ];
     
     // Filtrar apenas os agentes com IDs permitidos
-    const filteredAgents = agents.filter(agent => allowedIds.includes(agent.id));
+    const filteredAgents = agents.filter((agent: FreshchatAgent) => allowedIds.includes(agent.id));
     
     const now = new Date().toISOString();
-    const changes = [];
+    const changes: StatusChange[] = [];
 
     for (const agent of filteredAgents) {
       const currentStatus = agent.availability_status;
@@ -83,7 +97,8 @@ export async function GET() {
       total_changes: changes.length,
       changes,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -4,18 +4,7 @@ import { useFreshchatAgents } from "@/hooks/useFreshchatAgents";
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users } from "lucide-react";
 
-// Definição do tipo Agent para garantir acesso às propriedades corretas
-type Agent = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  avatar: { url: string };
-  login_status: boolean;
-  availability_status: string;
-  agent_status?: { id: string; name: string };
-  role_id?: string;
-};
+
 
 export function AgentesOn() {
   const { agents, loading } = useFreshchatAgents();
