@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-const xanoApiKey = process.env.XANO_API_KEY!;
-const xanoEndpoint = process.env.XANO_ENDPOINT!;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 interface HorarioData {
   horario_inicio?: string;
@@ -10,24 +13,6 @@ interface HorarioData {
   fim?: string;
   intervalo_inicio?: string;
   intervalo_fim?: string;
-}
-
-interface XanoAgent {
-  id: number;
-  nome: string;
-  email: string;
-  freshchat_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface XanoSchedule {
-  agents_id: number;
-  dia: string;
-  horario_inicio: number;
-  horario_fim: number;
-  intervalo_inicio: number;
-  intervalo_fim: number;
 }
 
 interface FormattedAgent {
@@ -48,9 +33,11 @@ interface FormattedAgent {
 
 export async function POST(request: Request) {
   try {
+    console.log('Recebendo requisição POST para criar agente');
     const agent = await request.json();
+    console.log('Dados do agente recebidos:', agent);
 
-    // Validar campos obrigatórios
+    // Validar dados obrigatórios
     if (!agent.nome || !agent.email || !agent.freshchat_id) {
       return NextResponse.json(
         { error: 'Nome, email e Freshchat ID são obrigatórios' },
@@ -58,118 +45,75 @@ export async function POST(request: Request) {
       );
     }
 
-    // Preparar dados para Xano
-    const xanoData = {
-      nome: agent.nome,
-      email: agent.email,
-      freshchat_id: agent.freshchat_id,
-      horarios: (Object.entries(agent.horarios) as [string, HorarioData][])
-        .filter(([dia]) => agent.dias_trabalho.includes(dia))
-        .map(([dia, horario]) => {
-          const horarioObj = {
-            dia,
-            horario_inicio: horario.horario_inicio || horario.inicio,
-            horario_fim: horario.horario_fim || horario.fim,
-            intervalo_inicio: horario.intervalo_inicio,
-            intervalo_fim: horario.intervalo_fim
-          };
-          
-          // Log para debug
-          console.log(`Horário para ${dia}:`, JSON.stringify(horarioObj, null, 2));
-          
-          return horarioObj;
-        })
-    };
+    // Verificar se já existe um agente com o mesmo email ou freshchat_id
+    const { data: existingAgent, error: checkError } = await supabase
+      .from('Agent')
+      .select('id, email, freshchat_id')
+      .or(`email.eq.${agent.email},freshchat_id.eq.${agent.freshchat_id}`)
+      .single();
 
-    // Cadastrar agente na Xano
-    const xanoResponse = await fetch(`${xanoEndpoint}/agents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${xanoApiKey}`
-      },
-      body: JSON.stringify(xanoData)
-    });
-
-    if (!xanoResponse.ok) {
-      throw new Error('Erro ao cadastrar agente na Xano');
+    if (existingAgent && !checkError) {
+      return NextResponse.json(
+        { error: 'Já existe um agente com este email ou Freshchat ID' },
+        { status: 409 }
+      );
     }
 
-    const agentData = await xanoResponse.json();
-    console.log('Dados do agente retornados pela Xano:', agentData);
+    // Preparar dados dos horários
+    const horariosData = (Object.entries(agent.horarios) as [string, HorarioData][])
+      .filter(([dia]) => agent.dias_trabalho.includes(dia))
+      .map(([dia, horario]) => ({
+        dia,
+        horario_inicio: horario.horario_inicio || horario.inicio || '',
+        horario_fim: horario.horario_fim || horario.fim || '',
+        intervalo_inicio: horario.intervalo_inicio || '',
+        intervalo_fim: horario.intervalo_fim || ''
+      }));
 
-    if (!agentData.id) {
-      throw new Error('ID do agente não retornado pela Xano');
+    // Criar o agente
+    const { data: newAgent, error: agentError } = await supabase
+      .from('Agent')
+      .insert({
+        nome: agent.nome,
+        email: agent.email,
+        freshchat_id: agent.freshchat_id,
+        avatar_url: agent.avatar_url || null,
+        cargo: agent.cargo || null,
+        turno: agent.turno || null,
+        status: 'ativo'
+      })
+      .select()
+      .single();
+
+    if (agentError) {
+      console.error('Erro ao criar agente:', agentError);
+      return NextResponse.json(
+        { error: 'Erro ao criar agente: ' + agentError.message },
+        { status: 500 }
+      );
     }
 
-    // Garantir que o ID é um número
-    const agentId = parseInt(agentData.id);
-    if (isNaN(agentId)) {
-      throw new Error('ID do agente inválido');
-    }
+    // Criar os horários se existirem
+    if (horariosData.length > 0) {
+      const { error: scheduleError } = await supabase
+        .from('AgentSchedule')
+        .insert(
+          horariosData.map(horario => ({
+            agent_id: newAgent.id,
+            ...horario
+          }))
+        );
 
-    // Cadastrar horários na tabela agent_schedules
-    if (xanoData.horarios.length > 0) {
-      console.log('ID do agente validado:', agentId);
-      const schedulePromises = xanoData.horarios.map(async (horario) => {
-        // Criar objeto com agent_id primeiro para garantir que está no topo do objeto
-        const scheduleData = {
-          agents_id: agentId, // Corrigido o nome do campo para agents_id conforme esperado pela API
-          dia: horario.dia,
-          horario_inicio: horario.horario_inicio,
-          horario_fim: horario.horario_fim,
-          intervalo_inicio: horario.intervalo_inicio,
-          intervalo_fim: horario.intervalo_fim
-        };
-
-        console.log('Estrutura final do scheduleData:', JSON.stringify(scheduleData, null, 2));
-
-        // Validar a estrutura do objeto antes de enviar
-        if (!scheduleData.agents_id || !scheduleData.dia) {
-          console.error('Dados do horário inválidos:', scheduleData);
-          throw new Error('Dados do horário inválidos');
-        }
-
-        const requestBody = JSON.stringify(scheduleData);
-        console.log('Corpo da requisição:', requestBody);
-
-        const scheduleResponse = await fetch(`${xanoEndpoint}/agent_schedules`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${xanoApiKey}`
-          },
-          body: requestBody
-        });
-
-        console.log('Status da resposta:', scheduleResponse.status);
-        
-        const responseText = await scheduleResponse.text();
-        console.log('Resposta do endpoint de schedules:', responseText);
-
-        if (!scheduleResponse.ok) {
-          console.error('Erro ao cadastrar horário:', responseText);
-          throw new Error('Erro ao cadastrar horário do agente');
-        }
-
-        // Tenta fazer o parse do JSON apenas se houver conteúdo
-        try {
-          return responseText ? JSON.parse(responseText) : null;
-        } catch (error) {
-          console.error('Erro ao fazer parse da resposta:', error);
-          return null;
-        }
-      });
-
-      try {
-        await Promise.all(schedulePromises);
-      } catch (error) {
-        console.error('Erro ao cadastrar horários:', error);
-        throw new Error('Erro ao cadastrar horários do agente');
+      if (scheduleError) {
+        console.error('Erro ao criar horários:', scheduleError);
+        // Não falhar a criação do agente por causa dos horários
       }
     }
 
-    return NextResponse.json(agentData);
+    const result = newAgent;
+
+    console.log('Agente criado com sucesso:', result);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Erro ao processar requisição:', error);
     return NextResponse.json(
@@ -179,132 +123,74 @@ export async function POST(request: Request) {
   }
 }
 
-// Função para aguardar um tempo específico
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Função para fazer requisição com retry em caso de limite de taxa
-async function fetchWithRetry(url: string, options: RequestInit, retryCount = 3, retryDelay = 2000) {
-  let lastError;
-  
-  for (let attempt = 0; attempt < retryCount; attempt++) {
-    try {
-      // Se não for a primeira tentativa, aguarda antes de tentar novamente
-      if (attempt > 0) {
-        console.log(`Tentativa ${attempt + 1} para ${url}. Aguardando ${retryDelay}ms...`);
-        await sleep(retryDelay);
-        // Aumenta o tempo de espera a cada tentativa
-        retryDelay = retryDelay * 1.5;
-      }
-      
-      const response = await fetch(url, options);
-      
-      // Se for erro de limite de taxa, tenta novamente
-      if (response.status === 429) {
-        const errorText = await response.text();
-        console.error(`Limite de taxa atingido na tentativa ${attempt + 1}:`, errorText);
-        lastError = new Error(`429 - ${errorText}`);
-        continue; // Tenta novamente
-      }
-      
-      return response; // Retorna a resposta se não for erro de limite de taxa
-    } catch (error) {
-      console.error(`Erro na tentativa ${attempt + 1}:`, error);
-      lastError = error;
-    }
-  }
-  
-  // Se chegou aqui, todas as tentativas falharam
-  throw lastError || new Error('Falha após múltiplas tentativas');
-}
-
 export async function GET() {
   try {
-    console.log('Buscando agentes da API do Xano...');
-    // Buscar agentes com retry
-    const agentsResponse = await fetchWithRetry(`${xanoEndpoint}/agents`, {
-      headers: {
-        'Authorization': `Bearer ${xanoApiKey}`
-      }
-    });
-
-    if (!agentsResponse.ok) {
-      const errorText = await agentsResponse.text();
-      throw new Error(`Erro ao buscar agentes da Xano: ${agentsResponse.status} - ${errorText}`);
-    }
-
-    const agentsData = await agentsResponse.json();
-    console.log('Dados brutos dos agentes:', agentsData);
-
-    if (!Array.isArray(agentsData)) {
-      console.error('Dados dos agentes não são um array:', agentsData);
-      return NextResponse.json([]);
-    }
-
-    // Aguarda 2 segundos antes de buscar os horários para evitar limite de taxa
-    console.log('Aguardando 2 segundos antes de buscar horários...');
-    await sleep(2000);
+    console.log('Buscando agentes do Supabase...');
     
-    console.log('Buscando horários da API do Xano...');
-    // Buscar horários com retry
-    const schedulesResponse = await fetchWithRetry(`${xanoEndpoint}/agent_schedules`, {
-      headers: {
-        'Authorization': `Bearer ${xanoApiKey}`
-      }
-    });
+    // Buscar agentes
+    const { data: agents, error: agentsError } = await supabase
+      .from('Agent')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    if (!schedulesResponse.ok) {
-      const errorText = await schedulesResponse.text();
-      throw new Error(`Erro ao buscar horários da Xano: ${schedulesResponse.status} - ${errorText}`);
+    if (agentsError) {
+      console.error('Erro ao buscar agentes:', agentsError);
+      return NextResponse.json(
+        { error: 'Erro ao buscar agentes: ' + agentsError.message },
+        { status: 500 }
+      );
     }
 
-    const schedulesData = await schedulesResponse.json();
-    console.log('Dados brutos dos horários:', schedulesData);
+    console.log('Dados brutos dos agentes:', agents);
+
+    // Buscar horários para todos os agentes
+    const { data: schedules, error: schedulesError } = await supabase
+      .from('AgentSchedule')
+      .select('*');
+
+    if (schedulesError) {
+      console.error('Erro ao buscar horários:', schedulesError);
+      // Continuar sem os horários se houver erro
+    }
 
     // Transformar os dados para o formato esperado pelo frontend
-    const formattedAgents = agentsData.map((agent: XanoAgent) => {
-      const agentSchedules = Array.isArray(schedulesData) 
-        ? schedulesData.filter((schedule: XanoSchedule) => schedule.agents_id === agent.id)
-        : [];
-
+    const formattedAgents: FormattedAgent[] = agents.map((agent) => {
       const formattedAgent: FormattedAgent = {
-        id: String(agent.id) || '',
-        nome: agent.nome || '',
-        email: agent.email || '',
-        freshchat_id: agent.freshchat_id || '',
+        id: agent.id,
+        nome: agent.nome,
+        email: agent.email,
+        freshchat_id: agent.freshchat_id,
         horarios: {},
         dias_trabalho: [],
         created_at: agent.created_at,
         updated_at: agent.updated_at
       };
 
-      // Processar horários
-      agentSchedules.forEach((schedule: XanoSchedule) => {
-        if (schedule && schedule.dia) {
-          // Converter timestamps para strings de horário no formato HH:MM
-          const formatTimeFromTimestamp = (timestamp: number): string => {
-            if (!timestamp) return '';
-            const date = new Date(timestamp);
-            return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
-          };
-
-          (formattedAgent.horarios as Record<string, {
-            horario_inicio?: string;
-            horario_fim?: string;
-            intervalo_inicio?: string;
-            intervalo_fim?: string;
-          }>)[schedule.dia] = {
-            horario_inicio: formatTimeFromTimestamp(schedule.horario_inicio) || '',
-            horario_fim: formatTimeFromTimestamp(schedule.horario_fim) || '',
-            intervalo_inicio: formatTimeFromTimestamp(schedule.intervalo_inicio) || '',
-            intervalo_fim: formatTimeFromTimestamp(schedule.intervalo_fim) || ''
-          };
-          
-          // Adicionar o dia à lista de dias de trabalho se ainda não estiver lá
-          if (!formattedAgent.dias_trabalho.includes(schedule.dia)) {
-            formattedAgent.dias_trabalho.push(schedule.dia);
+      // Processar horários se existirem
+      if (schedules) {
+        const agentSchedules = schedules.filter(schedule => schedule.agent_id === agent.id);
+        
+        agentSchedules.forEach((schedule) => {
+          if (schedule && schedule.dia) {
+            (formattedAgent.horarios as Record<string, {
+              horario_inicio?: string;
+              horario_fim?: string;
+              intervalo_inicio?: string;
+              intervalo_fim?: string;
+            }>)[schedule.dia] = {
+              horario_inicio: schedule.horario_inicio || '',
+              horario_fim: schedule.horario_fim || '',
+              intervalo_inicio: schedule.intervalo_inicio || '',
+              intervalo_fim: schedule.intervalo_fim || ''
+            };
+            
+            // Adicionar o dia à lista de dias de trabalho se ainda não estiver lá
+            if (!formattedAgent.dias_trabalho.includes(schedule.dia)) {
+              formattedAgent.dias_trabalho.push(schedule.dia);
+            }
           }
-        }
-      });
+        });
+      }
       
       // Log para debug
       console.log('Horários formatados para o agente:', formattedAgent.id, JSON.stringify(formattedAgent.horarios, null, 2));
@@ -320,5 +206,7 @@ export async function GET() {
       { error: 'Erro interno do servidor' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
