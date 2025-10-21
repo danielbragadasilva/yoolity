@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 import {
   BarChart3, MessageSquare, Trophy,
-  CalendarFold, LogOut, LaptopMinimal,
+  CalendarFold, LogOut,
   BookOpenText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
