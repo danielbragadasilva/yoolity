@@ -18,7 +18,7 @@ interface StatusChange {
 }
 
 const API_URL = "https://yoogatecnologia.freshchat.com/v2/agents?items_per_page=100";
-const BEARER_TOKEN = process.env.FRESHCHAT_BEARER_TOKEN!;
+const BEARER_TOKEN = process.env.FRESHCHAT_BEARER_TOKEN;
 
 // Cache local para comparação de status (dura apenas durante o runtime da instância)
 const lastStatuses: Record<string, string> = {};
@@ -26,6 +26,15 @@ const lastStatuses: Record<string, string> = {};
 export async function GET() {
   try {
     console.log("Iniciando monitoramento de status dos agentes Freshchat...");
+
+    // Verificar se o token está disponível
+    if (!BEARER_TOKEN) {
+      console.error("FRESHCHAT_BEARER_TOKEN não está definido");
+      return NextResponse.json(
+        { error: "Token de autenticação não configurado" },
+        { status: 500 }
+      );
+    }
 
     const response = await fetch(API_URL, {
       headers: {
@@ -152,6 +161,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "agent_id é obrigatório" },
         { status: 400 }
+      );
+    }
+
+    // Verificar se o token está disponível
+    if (!BEARER_TOKEN) {
+      console.error("FRESHCHAT_BEARER_TOKEN não está definido");
+      return NextResponse.json(
+        { error: "Token de autenticação não configurado" },
+        { status: 500 }
       );
     }
 
