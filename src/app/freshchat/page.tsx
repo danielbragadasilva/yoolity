@@ -81,7 +81,6 @@ function FreshChatTab() {
     "fd553095-3084-43bf-a1e1-7268082c336c",
     "8adf9899-3924-4340-8538-3a7fd1e99127",
     "28981349-9b86-4444-8016-adeaea56c0af",
-    "61270de4-eab0-4030-bd58-c344317fb99a",
     "c344c55f-6cb5-4f9c-b0c4-f22e5a50aab0",
     "092f21ae-1afb-43aa-99b1-b5c6af5a64df",
     "1b606bd9-9ac5-475f-b553-91553aa369d7",

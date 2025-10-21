@@ -32,6 +32,7 @@ export default function TrocasPage() {
   const [date, setDate] = useState<Date>()
   const [paymentDate, setPaymentDate] = useState<Date>()
   const [tipoUsuario, setTipoUsuario] = useState("agente") // ou "supervisor"
+  const [tipoTroca, setTipoTroca] = useState("com-pagamento")
   const [showPaymentOptions, setShowPaymentOptions] = useState(true)
 
   const trocas = [
@@ -188,7 +189,7 @@ export default function TrocasPage() {
                 <div className="grid gap-2">
                   <Label>Tipo de pagamento da troca</Label>
                   <RadioGroup
-                    defaultValue="com-pagamento"
+                    value={tipoTroca}
                     onValueChange={(value) => {
                       setTipoTroca(value)
                       setShowPaymentOptions(value === "com-pagamento")

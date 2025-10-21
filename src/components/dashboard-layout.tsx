@@ -49,7 +49,7 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
         .from("user_roles")
         .select("role")
         .eq("id", userId)
-        .single();
+        .single() as { data: { role: string } | null; error: Error | null };
 
       if (error || !data) {
         console.error("Erro ao buscar role do usuário:", error);
