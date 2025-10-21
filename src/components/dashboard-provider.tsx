@@ -4,7 +4,8 @@ import { AgentesAtivos } from "@/components/agentes-ativos"
 import { EscalaGrafico } from "@/components/escala-grafico"
 import { TrocasPendentes } from "@/components/trocas-pendentes"
 import { ResumoSemanal } from "@/components/resumo-semanal"
-import { Users, RefreshCw, ClipboardList, Calendar } from "lucide-react"
+import { RefreshCw, ClipboardList, Calendar } from "lucide-react"
+import { AgentesOn } from "./agentes-on"
 
 export default function DashboardPagePrimary() {
   return (
@@ -23,14 +24,7 @@ export default function DashboardPagePrimary() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agentes Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12/20</div>
-            <p className="text-xs text-muted-foreground">60% da equipe trabalhando agora</p>
-          </CardContent>
+          <AgentesOn />
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
