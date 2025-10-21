@@ -143,11 +143,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
   return (
     <Dialog>
       <Card className="overflow-hidden">
-        <div
-          className={`h-3 ${
-            agent.login_status ? "bg-green-500" : "bg-gray-400"
-          }`}
-        />
+        <div className="h-3 bg-primary" />
         <CardContent className="p-3">
           <div className="flex gap-2">
             <Avatar className="h-10 w-10 border items-start">

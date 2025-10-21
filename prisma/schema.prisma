@@ -1,3 +1,5 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -8,10 +10,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     String
+model Agent {
+  id           String      @id @default(cuid())
+  freshchat_id String      @unique
+  nome         String
+  email        String      @unique
+  role         String      @default("agent")
+  ativo        Boolean     @default(true)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  statusLogs   StatusLog[]
+
+  @@map("agents")
 }
 
+model StatusLog {
+  id              String   @id @default(cuid())
+  agent_id        String
+  status_anterior String
+  status_novo     String
+  timestamp       DateTime @default(now())
+  detalhes        String?
+  agent           Agent    @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+
+  @@map("status_logs")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  nome       String
+  role       String   @default("user")
+  ativo      Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("users")
+}
