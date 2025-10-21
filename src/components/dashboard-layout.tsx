@@ -106,14 +106,14 @@ export function DashboardLayout({}: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {role !== "agente" && (
+              {/* {role !== "agente" && (
                 <SidebarMenuItem>
                   <SidebarMenuButton isActive={activeTab === "freshchat"} onClick={() => setActiveTab("freshchat")}>
                     <LaptopMinimal className="h-5 w-5" />
                     <span>Monitor</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
+              )} */}
 
               {(role === "coordenador" || role === "supervisor") && (
                 <SidebarMenuItem>
