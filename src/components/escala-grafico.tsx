@@ -172,7 +172,7 @@ export function EscalaGrafico() {
   
   // Converter agentes do Freshchat para o formato do gráfico
   const agentes = agents.map((agent) => {
-    const turno = determinarTurno(agent);
+    const turno = determinarTurno();
     const freshStatus = getFreshStatus(agent);
     
     return gerarHorarioAgente(
@@ -241,14 +241,14 @@ export function EscalaGrafico() {
               variant="outline"
               className="flex items-center gap-1"
               style={{
-                backgroundColor: freshStatusColors[data.freshStatus],
+                backgroundColor: freshStatusColors[data.freshStatus as FreshStatus],
                 color: ["disponivel", "yoga", "agua"].includes(data.freshStatus)
                   ? "#000"
                   : "#fff",
               }}
             >
-              {freshStatusIcons[data.freshStatus]}{" "}
-              {freshStatusDescriptions[data.freshStatus]}
+              {freshStatusIcons[data.freshStatus as FreshStatus]}{" "}
+              {freshStatusDescriptions[data.freshStatus as FreshStatus]}
             </Badge>
           </div>
         </div>

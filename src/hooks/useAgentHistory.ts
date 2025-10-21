@@ -61,7 +61,7 @@ export const useAgentHistory = (agentId: string, currentStatusId: string) => {
     };
 
     saveStatusChange();
-  }, [currentStatusId]);
+  }, [currentStatusId, agentId, history]);
 
   return { history, lastChanged };
 };

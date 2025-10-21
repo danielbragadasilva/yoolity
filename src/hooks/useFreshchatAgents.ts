@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 
 type Agent = {
   id: string;
@@ -26,14 +26,14 @@ export function useFreshchatAgents() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
 
-  const allowedRoles = [
+  const allowedRoles = useMemo(() => [
     "855dd18d-0b29-4f2a-a6ad-931027963b9d", // coordenador
     "72bf957d-f2b7-41db-aa6f-8146351e4685", // agente
     "AGENT", // Agent - Andréa Guarani
-  ];
+  ], []);
 
   // Lista de IDs permitidos
-  const allowedIds = [
+  const allowedIds = useMemo(() => [
     "fd553095-3084-43bf-a1e1-7268082c336c",
     "8adf9899-3924-4340-8538-3a7fd1e99127",
     "28981349-9b86-4444-8016-adeaea56c0af",
@@ -48,7 +48,7 @@ export function useFreshchatAgents() {
     "5a8d3c94-6d4c-4564-818b-a1e90816188c",
     "83110aee-7535-43e9-98e3-1bfb9d4cc09a",
     "9f9a5eff-8d86-41c9-962a-1942ffbc5315" // Sofia
-  ];
+  ], []);
 
   // Função para verificar se os dados mudaram significativamente
   const hasSignificantChanges = useCallback((newAgents: Agent[], currentAgents: Agent[]) => {
@@ -118,7 +118,7 @@ export function useFreshchatAgents() {
         setIsInitialLoad(false);
       }
     }
-  }, [agents, allowedRoles, hasSignificantChanges, isInitialLoad]);
+  }, [agents, allowedRoles, hasSignificantChanges, isInitialLoad, allowedIds]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -137,7 +137,7 @@ export function useFreshchatAgents() {
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [fetchAgents]);
 
   // Função para forçar atualização (útil para sincronização manual)
   const refreshAgents = useCallback(() => {

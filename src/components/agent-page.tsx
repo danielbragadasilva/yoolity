@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,8 +65,412 @@ interface Agent {
   updated_at?: string;
 }
 
+// Tipo específico para o estado newAgent com estrutura fixa
+interface NewAgentState {
+  nome: string;
+  email: string;
+  freshchat_id: string;
+  horarios: {
+    Dom: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Seg: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Ter: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Qua: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Qui: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Sex: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+    Sab: {
+      horario_inicio: string;
+      horario_fim: string;
+      intervalo_inicio: string;
+      intervalo_fim: string;
+    };
+  };
+  dias_trabalho: string[];
+}
+
+// Tipo helper para acesso dinâmico aos horários
+type NewAgentHorarioKey = keyof NewAgentState['horarios']['Dom'];
+
+// Helper function para acessar valores de horários de forma segura para NewAgentState
+const getNewAgentHorarioValue = (horarios: NewAgentState['horarios'], dia: string, key: NewAgentHorarioKey): string => {
+  const horario = horarios[dia as keyof NewAgentState['horarios']];
+  if (!horario) return "";
+  return horario[key] || "";
+};
+
+// Helper function para atualizar horários de forma segura
+// Função para atualizar horários do newAgent
+const updateNewAgentHorario = (
+  agent: NewAgentState,
+  dia: string,
+  key: NewAgentHorarioKey,
+  value: string
+): NewAgentState => {
+  return {
+    ...agent,
+    horarios: {
+      ...agent.horarios,
+      [dia]: {
+        ...agent.horarios[dia as keyof NewAgentState['horarios']],
+        [key]: value,
+      },
+    },
+  };
+};
+
 // Ordem correta dos dias da semana (começando com Segunda e terminando com Domingo)
 const diasDaSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+// Dados mockados para testes - incluindo casos válidos e inválidos
+const MOCK_AGENTS: Agent[] = [
+  // Caso 1: Agente completo com escala padrão (Seg-Sex)
+  {
+    id: "1",
+    nome: "Ana Silva",
+    freshchat_id: "agent_001",
+    email: "ana.silva@empresa.com",
+    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+    dias_trabalho: ["Seg", "Ter", "Qua", "Qui", "Sex"],
+    horarios: {
+      Seg: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Ter: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Qua: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Qui: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Sex: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-15T10:30:00Z",
+    updated_at: "2024-01-20T14:45:00Z",
+  },
+  
+  // Caso 2: Agente com escala de fim de semana
+  {
+    id: "2",
+    nome: "Carlos Santos",
+    freshchat_id: "agent_002",
+    email: "carlos.santos@empresa.com",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+    dias_trabalho: ["Sáb", "Dom"],
+    horarios: {
+      Sáb: {
+        horario_inicio: "09:00",
+        horario_fim: "18:00",
+        intervalo_inicio: "13:00",
+        intervalo_fim: "14:00",
+      },
+      Dom: {
+        horario_inicio: "10:00",
+        horario_fim: "16:00",
+        intervalo_inicio: "13:00",
+        intervalo_fim: "14:00",
+      },
+    },
+    created_at: "2024-01-10T08:15:00Z",
+    updated_at: "2024-01-18T16:20:00Z",
+  },
+
+  // Caso 3: Agente com escala mista (alguns dias da semana + sábado)
+  {
+    id: "3",
+    nome: "Maria Oliveira",
+    freshchat_id: "agent_003",
+    email: "maria.oliveira@empresa.com",
+    dias_trabalho: ["Ter", "Qui", "Sáb"],
+    horarios: {
+      Ter: {
+        horario_inicio: "14:00",
+        horario_fim: "22:00",
+        intervalo_inicio: "18:00",
+        intervalo_fim: "19:00",
+      },
+      Qui: {
+        horario_inicio: "14:00",
+        horario_fim: "22:00",
+        intervalo_inicio: "18:00",
+        intervalo_fim: "19:00",
+      },
+      Sáb: {
+        horario_inicio: "08:00",
+        horario_fim: "14:00",
+        intervalo_inicio: "11:00",
+        intervalo_fim: "12:00",
+      },
+    },
+    created_at: "2024-01-12T11:00:00Z",
+    updated_at: "2024-01-19T09:30:00Z",
+  },
+
+  // Caso 4: Agente com horários irregulares (diferentes para cada dia)
+  {
+    id: "4",
+    nome: "João Pereira",
+    freshchat_id: "agent_004",
+    email: "joao.pereira@empresa.com",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+    dias_trabalho: ["Seg", "Qua", "Sex"],
+    horarios: {
+      Seg: {
+        horario_inicio: "06:00",
+        horario_fim: "14:00",
+        intervalo_inicio: "10:00",
+        intervalo_fim: "10:30",
+      },
+      Qua: {
+        horario_inicio: "10:00",
+        horario_fim: "18:00",
+        intervalo_inicio: "14:00",
+        intervalo_fim: "15:00",
+      },
+      Sex: {
+        horario_inicio: "16:00",
+        horario_fim: "00:00",
+        intervalo_inicio: "20:00",
+        intervalo_fim: "20:30",
+      },
+    },
+    created_at: "2024-01-08T07:45:00Z",
+    updated_at: "2024-01-22T13:15:00Z",
+  },
+
+  // Caso 5: Agente com dados mínimos (sem avatar, horários básicos)
+  {
+    id: "5",
+    nome: "Fernanda Costa",
+    freshchat_id: "agent_005",
+    email: "fernanda.costa@empresa.com",
+    dias_trabalho: ["Seg", "Ter"],
+    horarios: {
+      Seg: {
+        horario_inicio: "09:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Ter: {
+        horario_inicio: "09:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-25T15:20:00Z",
+  },
+
+  // Caso 6: Agente com escala completa (todos os dias)
+  {
+    id: "6",
+    nome: "Roberto Lima",
+    freshchat_id: "agent_006",
+    email: "roberto.lima@empresa.com",
+    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150",
+    dias_trabalho: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+    horarios: {
+      Dom: {
+        horario_inicio: "10:00",
+        horario_fim: "16:00",
+        intervalo_inicio: "13:00",
+        intervalo_fim: "14:00",
+      },
+      Seg: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Ter: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Qua: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Qui: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Sex: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+      Sáb: {
+        horario_inicio: "09:00",
+        horario_fim: "15:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-05T12:00:00Z",
+    updated_at: "2024-01-23T10:45:00Z",
+  },
+
+  // CASOS DE TESTE INVÁLIDOS/PROBLEMÁTICOS
+
+  // Caso 7: Agente com dados inconsistentes (horário fim antes do início)
+  {
+    id: "7",
+    nome: "Teste Horário Inválido",
+    freshchat_id: "agent_007",
+    email: "teste.invalido@empresa.com",
+    dias_trabalho: ["Seg"],
+    horarios: {
+      Seg: {
+        horario_inicio: "17:00", // Início depois do fim
+        horario_fim: "08:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-20T09:00:00Z",
+  },
+
+  // Caso 8: Agente com intervalo fora do horário de trabalho
+  {
+    id: "8",
+    nome: "Teste Intervalo Inválido",
+    freshchat_id: "agent_008",
+    email: "teste.intervalo@empresa.com",
+    dias_trabalho: ["Ter"],
+    horarios: {
+      Ter: {
+        horario_inicio: "09:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "18:00", // Intervalo fora do horário
+        intervalo_fim: "19:00",
+      },
+    },
+    created_at: "2024-01-21T10:30:00Z",
+  },
+
+  // Caso 9: Agente com email inválido
+  {
+    id: "9",
+    nome: "Teste Email Inválido",
+    freshchat_id: "agent_009",
+    email: "email-sem-arroba-nem-dominio", // Email inválido
+    dias_trabalho: ["Qua"],
+    horarios: {
+      Qua: {
+        horario_inicio: "08:00",
+        horario_fim: "16:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-22T14:15:00Z",
+  },
+
+  // Caso 10: Agente com campos obrigatórios vazios
+  {
+    id: "10",
+    nome: "", // Nome vazio
+    freshchat_id: "", // ID vazio
+    email: "teste.vazio@empresa.com",
+    dias_trabalho: [],
+    horarios: {},
+    created_at: "2024-01-23T16:45:00Z",
+  },
+
+  // Caso 11: Agente com horários usando formato antigo (inicio/fim)
+  {
+    id: "11",
+    nome: "Teste Formato Antigo",
+    freshchat_id: "agent_011",
+    email: "teste.formato@empresa.com",
+    dias_trabalho: ["Qui"],
+    horarios: {
+      Qui: {
+        inicio: "09:00", // Formato antigo
+        fim: "18:00",
+        intervalo_inicio: "13:00",
+        intervalo_fim: "14:00",
+      },
+    },
+    created_at: "2024-01-24T11:20:00Z",
+  },
+
+  // Caso 12: Agente com nome muito longo
+  {
+    id: "12",
+    nome: "Nome Extremamente Longo Para Testar Como o Sistema Lida Com Nomes Que Excedem o Tamanho Normal Esperado",
+    freshchat_id: "agent_012",
+    email: "nome.muito.longo@empresa.com",
+    dias_trabalho: ["Sex"],
+    horarios: {
+      Sex: {
+        horario_inicio: "08:00",
+        horario_fim: "17:00",
+        intervalo_inicio: "12:00",
+        intervalo_fim: "13:00",
+      },
+    },
+    created_at: "2024-01-25T08:30:00Z",
+  },
+];
+
+// Flag para controlar se deve usar dados mockados (útil para desenvolvimento)
+const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
 
 const AgentesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,7 +481,8 @@ const AgentesPage: React.FC = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
-  const [newAgent, setNewAgent] = useState({
+  const [useMockData, setUseMockData] = useState(USE_MOCK_DATA);
+  const [newAgent, setNewAgent] = useState<NewAgentState>({
     nome: "",
     email: "",
     freshchat_id: "",
@@ -124,12 +530,22 @@ const AgentesPage: React.FC = () => {
         intervalo_fim: "",
       },
     },
-    dias_trabalho: [] as string[],
+    dias_trabalho: [],
   });
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Se estiver usando dados mockados, retorna os dados de teste
+      if (useMockData) {
+        console.log("Usando dados mockados para teste:", MOCK_AGENTS);
+        setAgents(MOCK_AGENTS);
+        toast.success(`Carregados ${MOCK_AGENTS.length} agentes mockados para teste`);
+        return;
+      }
+      
+      // Caso contrário, busca dados reais da API
       const response = await fetch("/api/agents");
       const data = await response.json();
       if (!response.ok) {
@@ -147,11 +563,11 @@ const AgentesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [useMockData]);
 
   useEffect(() => {
     fetchAgents();
-  }, []);
+  }, [fetchAgents]);
 
   const filteredAgents = agents?.filter(
     (agent) =>
@@ -285,10 +701,37 @@ const AgentesPage: React.FC = () => {
               Gerencie os agentes e suas configurações
             </p>
           </div>
-          <Button onClick={() => setShowAddAgentDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Agente
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Botão para alternar entre dados mockados e reais (apenas em desenvolvimento) */}
+            {process.env.NODE_ENV === 'development' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={useMockData ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUseMockData(!useMockData)}
+                    >
+                      <Database className="h-4 w-4 mr-2" />
+                      {useMockData ? "Dados Mock" : "Dados Reais"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {useMockData 
+                        ? "Clique para usar dados reais da API" 
+                        : "Clique para usar dados mockados para teste"
+                      }
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <Button onClick={() => setShowAddAgentDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Agente
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
@@ -402,46 +845,18 @@ const AgentesPage: React.FC = () => {
                               <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                                 <Input
                                   type="time"
-                                  value={newAgent.horarios[dia]?.horario_inicio || newAgent.horarios[dia]?.inicio || ""}
+                                  value={getNewAgentHorarioValue(newAgent.horarios, dia, 'horario_inicio')}
                                   onChange={(e) => {
-                                    const updatedHorarios = {
-                                      ...newAgent.horarios,
-                                      [dia]: {
-                                        ...newAgent.horarios[dia],
-                                        horario_inicio: e.target.value,
-                                      },
-                                    };
-                                    // Remove o campo antigo se existir
-                                    if (updatedHorarios[dia].inicio) {
-                                      delete updatedHorarios[dia].inicio;
-                                    }
-                                    setNewAgent({
-                                      ...newAgent,
-                                      horarios: updatedHorarios,
-                                    });
+                                    setNewAgent(updateNewAgentHorario(newAgent, dia, 'horario_inicio', e.target.value));
                                   }}
                                   className="w-full sm:w-auto"
                                 />
                                 <span className="hidden sm:block">até</span>
                                 <Input
                                   type="time"
-                                  value={newAgent.horarios[dia].horario_fim || newAgent.horarios[dia].fim || ""}
+                                  value={getNewAgentHorarioValue(newAgent.horarios, dia, 'horario_fim')}
                                   onChange={(e) => {
-                                    const updatedHorarios = {
-                                      ...newAgent.horarios,
-                                      [dia]: {
-                                        ...newAgent.horarios[dia],
-                                        horario_fim: e.target.value,
-                                      },
-                                    };
-                                    // Remove o campo antigo se existir
-                                    if (updatedHorarios[dia].fim) {
-                                      delete updatedHorarios[dia].fim;
-                                    }
-                                    setNewAgent({
-                                      ...newAgent,
-                                      horarios: updatedHorarios,
-                                    });
+                                    setNewAgent(updateNewAgentHorario(newAgent, dia, 'horario_fim', e.target.value));
                                   }}
                                   className="w-full sm:w-auto"
                                 />
@@ -452,38 +867,18 @@ const AgentesPage: React.FC = () => {
                               <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                                 <Input
                                   type="time"
-                                  value={
-                                    newAgent.horarios[dia].intervalo_inicio
-                                  }
+                                  value={getNewAgentHorarioValue(newAgent.horarios, dia, 'intervalo_inicio')}
                                   onChange={(e) =>
-                                    setNewAgent({
-                                      ...newAgent,
-                                      horarios: {
-                                        ...newAgent.horarios,
-                                        [dia]: {
-                                          ...newAgent.horarios[dia],
-                                          intervalo_inicio: e.target.value,
-                                        },
-                                      },
-                                    })
+                                    setNewAgent(updateNewAgentHorario(newAgent, dia, 'intervalo_inicio', e.target.value))
                                   }
                                   className="w-full sm:w-auto"
                                 />
                                 <span className="hidden sm:block">até</span>
                                 <Input
                                   type="time"
-                                  value={newAgent.horarios[dia].intervalo_fim}
+                                  value={getNewAgentHorarioValue(newAgent.horarios, dia, 'intervalo_fim')}
                                   onChange={(e) =>
-                                    setNewAgent({
-                                      ...newAgent,
-                                      horarios: {
-                                        ...newAgent.horarios,
-                                        [dia]: {
-                                          ...newAgent.horarios[dia],
-                                          intervalo_fim: e.target.value,
-                                        },
-                                      },
-                                    })
+                                    setNewAgent(updateNewAgentHorario(newAgent, dia, 'intervalo_fim', e.target.value))
                                   }
                                   className="w-full sm:w-auto"
                                 />
@@ -636,15 +1031,15 @@ const AgentesPage: React.FC = () => {
                                   <Input
                                     type="time"
                                     value={
-                                      editingAgent.horarios[dia]?.horario_inicio ||
-                                      editingAgent.horarios[dia]?.inicio ||
+                                      (editingAgent.horarios as any)[dia]?.horario_inicio ||
+                                      (editingAgent.horarios as any)[dia]?.inicio ||
                                       ""
                                     }
                                     onChange={(e) => {
                                       const updatedHorarios = {
                                         ...editingAgent.horarios,
                                         [dia]: {
-                                          ...editingAgent.horarios[dia],
+                                          ...(editingAgent.horarios as any)[dia],
                                           horario_inicio: e.target.value,
                                         },
                                       };
@@ -663,15 +1058,15 @@ const AgentesPage: React.FC = () => {
                                   <Input
                                     type="time"
                                     value={
-                                      editingAgent.horarios[dia]?.horario_fim ||
-                                      editingAgent.horarios[dia]?.fim ||
+                                      (editingAgent.horarios as any)[dia]?.horario_fim ||
+                                      (editingAgent.horarios as any)[dia]?.fim ||
                                       ""
                                     }
                                     onChange={(e) => {
                                       const updatedHorarios = {
                                         ...editingAgent.horarios,
                                         [dia]: {
-                                          ...editingAgent.horarios[dia],
+                                          ...(editingAgent.horarios as any)[dia],
                                           horario_fim: e.target.value,
                                         },
                                       };
@@ -694,7 +1089,7 @@ const AgentesPage: React.FC = () => {
                                   <Input
                                     type="time"
                                     value={
-                                      editingAgent.horarios[dia]?.intervalo_inicio ||
+                                      (editingAgent.horarios as any)[dia]?.intervalo_inicio ||
                                       ""
                                     }
                                     onChange={(e) =>
@@ -703,7 +1098,7 @@ const AgentesPage: React.FC = () => {
                                         horarios: {
                                           ...editingAgent.horarios,
                                           [dia]: {
-                                            ...editingAgent.horarios[dia],
+                                            ...(editingAgent.horarios as any)[dia],
                                             intervalo_inicio: e.target.value,
                                           },
                                         },
@@ -715,7 +1110,7 @@ const AgentesPage: React.FC = () => {
                                   <Input
                                     type="time"
                                     value={
-                                      editingAgent.horarios[dia]?.intervalo_fim ||
+                                      (editingAgent.horarios as any)[dia]?.intervalo_fim ||
                                       ""
                                     }
                                     onChange={(e) =>
@@ -724,7 +1119,7 @@ const AgentesPage: React.FC = () => {
                                         horarios: {
                                           ...editingAgent.horarios,
                                           [dia]: {
-                                            ...editingAgent.horarios[dia],
+                                            ...(editingAgent.horarios as any)[dia],
                                             intervalo_fim: e.target.value,
                                           },
                                         },
@@ -839,7 +1234,7 @@ const AgentesPage: React.FC = () => {
                         horario.intervalo_fim;
 
                       // Formatar horários para exibição
-                      const formatTime = (time) => {
+                      const formatTime = (time: string | number | undefined): string => {
                         if (!time) return "--:--";
 
                         // Se for um timestamp numérico (ex: 1752994800000)
@@ -889,11 +1284,11 @@ const AgentesPage: React.FC = () => {
                         if (inicio && fim) {
                           try {
                             // Converter para minutos do dia, independente do formato
-                            const getMinutesFromTime = (time) => {
+                            const getMinutesFromTime = (time: string | number | undefined): number => {
                               // Se for timestamp numérico
                               if (
                                 typeof time === "number" ||
-                                /^\d+$/.test(time)
+                                (typeof time === "string" && /^\d+$/.test(time))
                               ) {
                                 const date = new Date(Number(time));
                                 return date.getUTCHours() * 60 + date.getUTCMinutes();
