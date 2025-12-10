@@ -64,7 +64,9 @@ export async function GET() {
       "487010b9-0082-4738-9647-7f26dffa3086",
       "5a8d3c94-6d4c-4564-818b-a1e90816188c",
       "83110aee-7535-43e9-98e3-1bfb9d4cc09a",
-      "9f9a5eff-8d86-41c9-962a-1942ffbc5315" // Sofia
+      "9f9a5eff-8d86-41c9-962a-1942ffbc5315", // Sofia
+      "09920aef-a41e-4776-999d-6572b1137a15",
+      "f33f312a-7220-4ffa-8512-21e2a70e8e63",
     ];
     
     // Filtrar apenas os agentes com IDs permitidos

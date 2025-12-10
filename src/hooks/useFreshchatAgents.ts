@@ -37,7 +37,6 @@ export function useFreshchatAgents() {
     "fd553095-3084-43bf-a1e1-7268082c336c",
     "8adf9899-3924-4340-8538-3a7fd1e99127",
     "28981349-9b86-4444-8016-adeaea56c0af",
-    "61270de4-eab0-4030-bd58-c344317fb99a",
     "c344c55f-6cb5-4f9c-b0c4-f22e5a50aab0",
     "092f21ae-1afb-43aa-99b1-b5c6af5a64df",
     "1b606bd9-9ac5-475f-b553-91553aa369d7",
@@ -47,7 +46,9 @@ export function useFreshchatAgents() {
     "487010b9-0082-4738-9647-7f26dffa3086",
     "5a8d3c94-6d4c-4564-818b-a1e90816188c",
     "83110aee-7535-43e9-98e3-1bfb9d4cc09a",
-    "9f9a5eff-8d86-41c9-962a-1942ffbc5315" // Sofia
+    "9f9a5eff-8d86-41c9-962a-1942ffbc5315", // Sofia
+    "09920aef-a41e-4776-999d-6572b1137a15",
+    "f33f312a-7220-4ffa-8512-21e2a70e8e63", // Sofia
   ], []);
 
   // Função para verificar se os dados mudaram significativamente
